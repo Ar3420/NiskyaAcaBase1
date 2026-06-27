@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #111827;
+  background: #faf8f3;
+}
+
+body {
+  min-height: 100vh;
+  background: #faf8f3;
+}
+
+a {
+  color: #b88a10;
+  text-decoration: underline;
+  text-decoration-color: #f6c453;
+  text-underline-offset: 3px;
+}
+
+input,
+select,
+textarea {
+  color: #111827;
+}
+
+.content-heading {
+  color: #5f0f17;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+}
+
+.card-link {
+  color: inherit;
+  text-decoration: none !important;
+}
+
+.card-link * {
+  text-decoration: none !important;
+}
+
+.card-link-heading {
+  color: #b88a10;
+  text-decoration: underline !important;
+  text-decoration-color: #f6c453 !important;
+  text-underline-offset: 3px;
+}

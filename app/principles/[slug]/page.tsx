@@ -1,0 +1,201 @@
+import { notFound, redirect } from "next/navigation";
+import { AttributedText } from "@/components/AttributedText";
+import { DatabasePageLayout, LinkList, Section } from "@/components/DatabasePageLayout";
+import { canModerate, getHelixSession } from "@/lib/auth";
+import { getAssignments, getClasses, getEntityRevisions, getPrinciple, getPrinciples, getResources, getSubjects } from "@/lib/database";
+import { formatRelatedLinks, parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
+import { buildDatabaseLinkTargets } from "@/lib/linkTargets";
+import { updateEntityFromSnapshot } from "@/lib/mutations";
+
+export default async function PrinciplePage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?: Promise<{ edit?: string; error?: string }> }) {
+  const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
+  const entry = await getPrinciple(slug);
+  if (!entry) notFound();
+  const isEditing = resolvedSearchParams?.edit === "1";
+
+  const [classes, subjects, principles, assignments, resources, revisions] = await Promise.all([
+    getClasses(),
+    getSubjects(),
+    getPrinciples(),
+    getAssignments(),
+    getResources(),
+    getEntityRevisions("principle", entry.id),
+  ]);
+  const relatedClasses = classes.filter((course) => entry.relatedClassSlugs.includes(course.slug));
+  const relatedSubjects = subjects.filter((subject) => entry.relatedSubjectSlugs.includes(subject.slug));
+  const relatedAssignments = assignments.filter((assignment) => entry.relatedAssignmentSlugs.includes(assignment.slug) || assignment.relatedPrincipleSlugs.includes(entry.slug));
+  const linkedResources = resources.filter((resource) => entry.resourceSlugs.includes(resource.slug));
+  const linkTargets = buildDatabaseLinkTargets({
+    classes,
+    subjects,
+    principles,
+    assignments,
+    resources,
+    currentHref: `/principles/${entry.slug}`,
+  });
+  const entityId = entry.id;
+  const currentPublished = entry.published;
+
+  async function savePrincipleAction(formData: FormData) {
+    "use server";
+
+    const session = await getHelixSession();
+    if (!session) redirect(`/login?next=/principles/${slug}?edit=1`);
+
+    const snapshot = {
+      slug: textField(formData, "slug"),
+      title: textField(formData, "title"),
+      overview: textField(formData, "overview"),
+      details: detailField(formData),
+      relatedClassSlugs: resolveReferences(textField(formData, "relatedClassSlugs"), referenceTargets(classes, "classes")),
+      relatedSubjectSlugs: resolveReferences(textField(formData, "relatedSubjectSlugs"), referenceTargets(subjects, "subjects")),
+      relatedAssignmentSlugs: resolveReferences(textField(formData, "relatedAssignmentSlugs"), referenceTargets(assignments, "assignments")),
+      resourceSlugs: resolveReferences(textField(formData, "resourceSlugs"), referenceTargets(resources, "resources")),
+      relatedLinks: parseManualRelatedLinks(textField(formData, "relatedLinks"), linkTargets),
+      published: canModerate(session) ? formData.get("published") === "on" : currentPublished,
+    };
+
+    const result = await updateEntityFromSnapshot({
+      entityType: "principle",
+      entityId,
+      snapshot,
+      changeSummary: textField(formData, "changeSummary"),
+      session,
+    });
+
+    if (!result.ok) redirect(`/principles/${slug}?edit=1&error=${encodeURIComponent(result.error ?? "Save failed")}`);
+    redirect(`/principles/${snapshot.slug}`);
+  }
+
+  return (
+    <DatabasePageLayout
+      title={entry.title}
+      entityType="principle"
+      slug={entry.slug}
+      toc={["Overview", "Details", "Related classes", "Related subjects", "Related assignments", "Linked resources", "Related links", "Revision history"]}
+      infoboxTheme="principle"
+      infoRows={[
+        { label: "Classes", value: relatedClasses.length },
+        { label: "Subjects", value: relatedSubjects.length },
+        { label: "Specificity", value: "Principle" },
+        { label: "Status", value: entry.published ? "Published" : "Draft" },
+      ]}
+      infoboxEditor={
+        <>
+          <InfoboxInput form="principle-edit-form" label="Classes" name="relatedClassSlugs" defaultValue={relatedClasses.map((course) => course.title).join(", ")} help="Use page titles, URLs, or slugs." />
+          <InfoboxInput form="principle-edit-form" label="Subjects" name="relatedSubjectSlugs" defaultValue={relatedSubjects.map((subject) => subject.title).join(", ")} help="Use page titles, URLs, or slugs." />
+          <InfoboxInput form="principle-edit-form" label="Assignments" name="relatedAssignmentSlugs" defaultValue={relatedAssignments.map((assignment) => assignment.title).join(", ")} help="Use page titles, URLs, or slugs." />
+          <InfoboxInput form="principle-edit-form" label="Resources" name="resourceSlugs" defaultValue={linkedResources.map((resource) => resource.title).join(", ")} help="Use page titles, URLs, or slugs." />
+          <InfoboxStatic label="Status" value={entry.published ? "Published" : "Draft"} />
+        </>
+      }
+      specificityTree={<TreeItems items={[relatedClasses[0]?.title ?? "Class TBD", relatedSubjects[0]?.title ?? "Subject TBD", entry.title]} />}
+      related={<LinkList links={[...relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title })), ...entry.relatedLinks]} />}
+      relatedEditor={<RelatedLinksEditor form="principle-edit-form" links={entry.relatedLinks} />}
+      revisions={revisions}
+      isEditing={isEditing}
+    >
+      {isEditing ? (
+        <form id="principle-edit-form" action={savePrincipleAction} className="not-prose grid gap-6">
+          {resolvedSearchParams?.error ? <p className="border border-nisky bg-nisky/5 p-3 text-sm text-nisky">{resolvedSearchParams.error}</p> : null}
+          <input type="hidden" name="slug" defaultValue={entry.slug} />
+          <input type="hidden" name="title" defaultValue={entry.title} />
+          <input type="hidden" name="published" value={entry.published ? "on" : ""} />
+          <Section title="Overview">
+            <textarea name="overview" defaultValue={entry.overview} rows={6} className="mt-3 w-full border border-line bg-white p-3 text-sm leading-6" />
+          </Section>
+          <Section title="Details">
+            <div className="mt-4 space-y-5">
+              {entry.details.map((detail, index) => (
+                <section key={`${detail.title}-${index}`}>
+                  <input name="detailTitle" defaultValue={detail.title} className="w-full border-0 border-b border-line bg-transparent px-0 py-2 font-serif text-xl font-bold outline-none focus:border-gold" />
+                  <textarea name="detailBody" defaultValue={detail.body} rows={5} className="mt-2 w-full border border-line bg-white p-3 text-sm leading-6" />
+                </section>
+              ))}
+              <section>
+                <input name="detailTitle" placeholder="New formula, law, or principle detail" className="w-full border-0 border-b border-line bg-transparent px-0 py-2 font-serif text-xl font-bold outline-none focus:border-gold" />
+                <textarea name="detailBody" placeholder="Text for this detail" rows={5} className="mt-2 w-full border border-line bg-white p-3 text-sm leading-6" />
+              </section>
+            </div>
+          </Section>
+          <label className="grid gap-2 text-sm font-medium">
+            Change summary
+            <input name="changeSummary" className="border border-line bg-white px-3 py-2" placeholder="Briefly describe what changed" />
+          </label>
+          <button className="w-fit border border-nisky bg-nisky px-4 py-2 text-sm font-medium text-white">Save changes</button>
+        </form>
+      ) : (
+        <>
+          <Section title="Overview"><p><AttributedText revisions={revisions} field="overview" linkTargets={linkTargets}>{entry.overview}</AttributedText></p></Section>
+          <Section title="Details">
+            {entry.details.length === 0 ? (
+              <p className="text-muted">No detailed principles, formulas, or laws have been added yet.</p>
+            ) : (
+              <div className="not-prose mt-5 space-y-6">
+                {entry.details.map((detail) => (
+                  <section key={detail.title}>
+                    <h3 className="font-serif text-2xl font-bold text-ink">{detail.title}</h3>
+                    <div className="mt-2 min-h-16 text-sm leading-6">
+                      {detail.body ? <p><AttributedText revisions={revisions} field="details" itemTitle={detail.title} linkTargets={linkTargets}>{detail.body}</AttributedText></p> : <p className="text-muted">No description has been added for this detail yet.</p>}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            )}
+          </Section>
+          <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section>
+          <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section>
+          <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section>
+          <Section title="Linked resources"><LinkList links={linkedResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} /></Section>
+        </>
+      )}
+    </DatabasePageLayout>
+  );
+}
+
+function TreeItems({ items }: { items: string[] }) {
+  return <ol className="space-y-1 border-l border-line pl-3">{items.map((item) => <li key={item}>{item}</li>)}</ol>;
+}
+
+function textField(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim();
+}
+
+function detailField(formData: FormData) {
+  const titles = formData.getAll("detailTitle").map((item) => String(item).trim());
+  const bodies = formData.getAll("detailBody").map((item) => String(item).trim());
+  return titles.map((title, index) => ({ title, body: bodies[index] ?? "" })).filter((detail) => detail.title);
+}
+
+function InfoboxInput({ form, label, name, defaultValue, help }: { form: string; label: string; name: string; defaultValue: string; help?: string }) {
+  return (
+    <label className="grid gap-1">
+      <span className="font-medium text-muted">{label}</span>
+      <input form={form} name={name} defaultValue={defaultValue} className="border border-line bg-white px-2 py-1" />
+      {help ? <span className="text-xs text-muted">{help}</span> : null}
+    </label>
+  );
+}
+
+function InfoboxStatic({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1">
+      <span className="font-medium text-muted">{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function RelatedLinksEditor({ form, links }: { form: string; links: { label: string; href: string }[] }) {
+  return (
+    <textarea
+      form={form}
+      name="relatedLinks"
+      defaultValue={formatRelatedLinks(links)}
+      rows={4}
+      placeholder="One per line: page title, page URL, or Label | URL"
+      className="w-full border border-line bg-white p-3 text-sm leading-6"
+    />
+  );
+}
