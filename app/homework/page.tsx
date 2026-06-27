@@ -230,7 +230,6 @@ function AssignmentRow({ entry, classes }: { entry: AssignmentEntry; classes: Cl
       <span className="text-sm font-medium">{new Date(`${entry.dueDate}T12:00:00`).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
       <span>
         <strong className="font-serif text-xl">{entry.title}</strong>
-        <span className="mt-1 block text-sm text-muted">{entry.description}</span>
       </span>
       <span className="text-sm text-muted">{course?.title} - {entry.assignmentType}</span>
     </Link>

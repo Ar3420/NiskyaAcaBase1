@@ -198,7 +198,6 @@ function ResourceRow({
       </span>
       <span>
         <strong className="font-serif text-xl">{entry.title}</strong>
-        <span className="mt-1 block text-sm text-muted">{entry.description || "No description has been added yet."}</span>
         {entry.externalUrl || entry.fileUrl ? (
           <span className="mt-2 inline-flex items-center gap-1 text-xs text-gold">
             <LinkIcon className="h-3 w-3" aria-hidden="true" />
