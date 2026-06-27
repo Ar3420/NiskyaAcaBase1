@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AttributedText } from "@/components/AttributedText";
 import { DatabasePageLayout, LinkList, Section } from "@/components/DatabasePageLayout";
+import { EditableTextArea } from "@/components/EditableTextArea";
 import { InlineEditPanel } from "@/components/InlineEditPanel";
 import { SpecificityBranch } from "@/components/SpecificityBranch";
 import { getAssignment, getClasses, getEntityRevisions, getPrinciples, getResources, getSubjects } from "@/lib/database";
@@ -112,7 +113,7 @@ function InfoboxStatic({ label, value }: { label: string; value: string }) {
 
 function RelatedLinksEditor({ form, links }: { form: string; links: { label: string; href: string }[] }) {
   return (
-    <textarea
+    <EditableTextArea
       form={form}
       name="relatedLinks"
       defaultValue={formatRelatedLinks(links)}

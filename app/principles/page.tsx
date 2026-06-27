@@ -2,12 +2,18 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { getHelixSession } from "@/lib/auth";
-import { getPrinciples } from "@/lib/database";
+import { getClasses, getPrinciples, getSubjects } from "@/lib/database";
+import { referenceTargets, resolveReferences } from "@/lib/editParsing";
 import { createEntityFromSnapshot } from "@/lib/mutations";
 
 export default async function PrinciplesPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
   const resolvedSearchParams = await searchParams;
-  const [principles, session] = await Promise.all([getPrinciples(), getHelixSession()]);
+  const [principles, classes, subjects, session] = await Promise.all([
+    getPrinciples(),
+    getClasses(),
+    getSubjects(),
+    getHelixSession(),
+  ]);
   const query = resolvedSearchParams?.q?.trim() ?? "";
   const normalized = query.toLowerCase();
   const filteredPrinciples = principles
@@ -32,10 +38,11 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
       slug,
       overview: textField(formData, "overview"),
       details: [],
-      relatedClassSlugs: listField(formData, "relatedClassSlugs"),
-      relatedSubjectSlugs: listField(formData, "relatedSubjectSlugs"),
+      relatedClassSlugs: resolveReferences(textField(formData, "relatedClassSlugs"), referenceTargets(classes, "classes")),
+      relatedSubjectSlugs: resolveReferences(textField(formData, "relatedSubjectSlugs"), referenceTargets(subjects, "subjects")),
       relatedAssignmentSlugs: [],
       resourceSlugs: [],
+      relatedLinks: [],
       published: true,
     };
     const result = await createEntityFromSnapshot({
@@ -107,8 +114,8 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
                     <input name="title" required placeholder="Principle title" className="border border-line bg-white px-3 py-2 text-sm" />
                     <input name="slug" placeholder="Slug, optional" className="border border-line bg-white px-3 py-2 text-sm" />
                   </div>
-                  <input name="relatedClassSlugs" placeholder="Related class slugs, comma-separated" className="border border-line bg-white px-3 py-2 text-sm" />
-                  <input name="relatedSubjectSlugs" placeholder="Related subject slugs, comma-separated" className="border border-line bg-white px-3 py-2 text-sm" />
+                  <input name="relatedClassSlugs" placeholder="Related class links, titles, or slugs" className="border border-line bg-white px-3 py-2 text-sm" />
+                  <input name="relatedSubjectSlugs" placeholder="Related subject links, titles, or slugs" className="border border-line bg-white px-3 py-2 text-sm" />
                   <textarea name="overview" rows={3} placeholder="Short principle overview" className="border border-line bg-white px-3 py-2 text-sm" />
                   <button className="w-fit border border-nisky bg-nisky px-4 py-2 text-sm font-medium text-white">Create principle</button>
                 </form>
@@ -151,10 +158,6 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
 
 function textField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function listField(formData: FormData, key: string) {
-  return textField(formData, key).split(",").map((item) => item.trim()).filter(Boolean);
 }
 
 function slugify(value: string) {

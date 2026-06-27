@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { EditableTextArea } from "@/components/EditableTextArea";
 import { canEdit, canModerate, getHelixSession } from "@/lib/auth";
 import { parseManualRelatedLinks } from "@/lib/editParsing";
 import { updateEntityFromSnapshot } from "@/lib/mutations";
@@ -175,7 +176,7 @@ function TextArea({ label, name, defaultValue, disabled, help }: { label: string
   return (
     <label className="grid gap-2 text-sm font-medium">
       {label}
-      <textarea name={name} disabled={disabled} defaultValue={defaultValue} rows={5} className="border border-line bg-white px-3 py-2" />
+      <EditableTextArea name={name} disabled={disabled} defaultValue={defaultValue} rows={5} className="border border-line bg-white px-3 py-2" />
       {help ? <span className="text-xs font-normal text-muted">{help}</span> : null}
     </label>
   );

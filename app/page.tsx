@@ -37,8 +37,7 @@ export default function HomePage() {
       <SiteNav variant="home" />
       <main className="mx-auto max-w-6xl px-4 py-10">
         <section className="border border-line bg-white px-5 py-10 text-center">
-          <h1 className="font-serif text-4xl font-semibold md:text-5xl">Niskayuna Academic Database</h1>
-          <p className="mt-3 text-lg text-muted">A Helix Research and Development academic knowledge project</p>
+          <p className="text-lg text-muted">A Helix Research and Development academic knowledge project</p>
           <Image
             src="/na-database-logo.png"
             alt="Niskayuna Academic Database logo"

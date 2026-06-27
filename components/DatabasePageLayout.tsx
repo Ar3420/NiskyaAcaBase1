@@ -256,7 +256,7 @@ function slugifyHeading(value: string) {
 function infoboxHeaderClass(theme: InfoboxTheme) {
   if (theme === "class") return "bg-orange-200 text-orange-950";
   if (theme === "subject") return "bg-red-200 text-red-950";
-  if (theme === "principle") return "bg-yellow-200 text-yellow-950";
+  if (theme === "principle") return "bg-gold text-ink";
   if (theme === "assignment") return "bg-amber-700 text-white";
   if (theme === "resource") return "bg-red-950 text-white";
   return "bg-wing/45 text-ink";

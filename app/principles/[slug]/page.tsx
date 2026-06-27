@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { AttributedText } from "@/components/AttributedText";
 import { DatabasePageLayout, LinkList, Section } from "@/components/DatabasePageLayout";
+import { EditableFeatureList } from "@/components/EditableFeatureList";
+import { EditableTextArea } from "@/components/EditableTextArea";
 import { SpecificityBranch } from "@/components/SpecificityBranch";
 import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClasses, getEntityRevisions, getPrinciple, getPrinciples, getResources, getSubjects } from "@/lib/database";
@@ -119,21 +121,17 @@ export default async function PrinciplePage({ params, searchParams }: { params: 
           <input type="hidden" name="title" defaultValue={entry.title} />
           <input type="hidden" name="published" value={entry.published ? "on" : ""} />
           <Section title="Overview">
-            <textarea name="overview" defaultValue={entry.overview} rows={6} className="mt-3 w-full border border-line bg-white p-3 text-sm leading-6" />
+            <EditableTextArea name="overview" defaultValue={entry.overview} rows={6} className="mt-3 w-full border border-line bg-white p-3 text-sm leading-6" />
           </Section>
           <Section title="Details">
-            <div className="mt-4 space-y-5">
-              {entry.details.map((detail, index) => (
-                <section key={`${detail.title}-${index}`}>
-                  <input name="detailTitle" defaultValue={detail.title} className="w-full border-0 border-b border-line bg-transparent px-0 py-2 font-serif text-xl font-bold outline-none focus:border-gold" />
-                  <textarea name="detailBody" defaultValue={detail.body} rows={5} className="mt-2 w-full border border-line bg-white p-3 text-sm leading-6" />
-                </section>
-              ))}
-              <section>
-                <input name="detailTitle" placeholder="New formula, law, or principle detail" className="w-full border-0 border-b border-line bg-transparent px-0 py-2 font-serif text-xl font-bold outline-none focus:border-gold" />
-                <textarea name="detailBody" placeholder="Text for this detail" rows={5} className="mt-2 w-full border border-line bg-white p-3 text-sm leading-6" />
-              </section>
-            </div>
+            <EditableFeatureList
+              items={entry.details}
+              titleName="detailTitle"
+              bodyName="detailBody"
+              headingPlaceholder="New formula, law, or principle detail"
+              bodyPlaceholder="Text for this detail"
+              addLabel="Add detail"
+            />
           </Section>
           <label className="grid gap-2 text-sm font-medium">
             Change summary
@@ -199,7 +197,7 @@ function InfoboxStatic({ label, value }: { label: string; value: string }) {
 
 function RelatedLinksEditor({ form, links }: { form: string; links: { label: string; href: string }[] }) {
   return (
-    <textarea
+    <EditableTextArea
       form={form}
       name="relatedLinks"
       defaultValue={formatRelatedLinks(links)}
