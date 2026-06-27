@@ -30,13 +30,26 @@ export default async function ResourcePage({ params, searchParams }: { params: P
     resources: [entry],
     currentHref: `/resources/${entry.slug}`,
   });
+  const isEditing = resolvedSearchParams?.edit === "1";
+  const hasContent = Boolean(entry.contentBody.trim());
+  const hasDescription = Boolean(entry.description.trim());
+  const visibleToc = [
+    hasDescription || isEditing ? "Description" : null,
+    hasContent || isEditing ? "Content" : null,
+    relatedClasses.length > 0 || isEditing ? "Related classes" : null,
+    relatedSubjects.length > 0 || isEditing ? "Related subjects" : null,
+    relatedAssignments.length > 0 || isEditing ? "Related assignments" : null,
+    entry.contributor || isEditing ? "Contributor information" : null,
+    relatedClasses.length + entry.relatedLinks.length > 0 || isEditing ? "Related links" : null,
+    "Revision history",
+  ].filter((item): item is string => Boolean(item));
 
   return (
     <DatabasePageLayout
       title={entry.title}
       entityType="resource"
       slug={entry.slug}
-      toc={["Description", "Content", "Related classes", "Related subjects", "Related assignments", "Contributor information", "Related links", "Revision history"]}
+      toc={visibleToc}
       infoboxTheme="resource"
       infoRows={[
         { label: "Type", value: entry.resourceType },
@@ -52,16 +65,17 @@ export default async function ResourcePage({ params, searchParams }: { params: P
       }
       related={<LinkList links={[...relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title })), ...entry.relatedLinks]} />}
       relatedEditor={<RelatedLinksEditor form="resource-edit-form" links={entry.relatedLinks} />}
+      showRelatedLinks={relatedClasses.length + entry.relatedLinks.length > 0}
       revisions={revisions}
-      isEditing={resolvedSearchParams?.edit === "1"}
+      isEditing={isEditing}
       editPanel={<InlineEditPanel entityType="resource" entry={entry} error={resolvedSearchParams?.error} formId="resource-edit-form" />}
     >
-      <Section title="Description"><p><AttributedText revisions={revisions} field="description" linkTargets={linkTargets}>{entry.description}</AttributedText></p></Section>
-      <Section title="Content"><p><AttributedText revisions={revisions} field="contentBody" linkTargets={linkTargets}>{entry.contentBody}</AttributedText></p></Section>
-      <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section>
-      <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section>
-      <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section>
-      <Section title="Contributor information"><p>{entry.contributor}</p></Section>
+      {hasDescription ? <Section title="Description"><p><AttributedText revisions={revisions} field="description" linkTargets={linkTargets}>{entry.description}</AttributedText></p></Section> : null}
+      {hasContent ? <Section title="Content"><p><AttributedText revisions={revisions} field="contentBody" linkTargets={linkTargets}>{entry.contentBody}</AttributedText></p></Section> : null}
+      {relatedClasses.length > 0 ? <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section> : null}
+      {relatedSubjects.length > 0 ? <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section> : null}
+      {relatedAssignments.length > 0 ? <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section> : null}
+      {entry.contributor ? <Section title="Contributor information"><p>{entry.contributor}</p></Section> : null}
     </DatabasePageLayout>
   );
 }

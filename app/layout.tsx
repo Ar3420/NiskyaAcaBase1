@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: "Niskayuna Academic Database",
   description: "A Helix Research and Development academic knowledge project.",
   icons: {
-    icon: "/na-database-logo.png",
-    shortcut: "/na-database-logo.png",
-    apple: "/na-database-logo.png",
+    icon: "/Helixico.ico",
+    shortcut: "/Helixico.ico",
+    apple: "/Helixico.ico",
   },
 };
 

@@ -22,7 +22,6 @@ export function IndexPage({
             <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
               <div>
                 <h2 className="card-link-heading font-serif text-2xl font-semibold">{item.title}</h2>
-                <p className="mt-1 text-sm text-muted">{item.description}</p>
               </div>
               {item.meta ? <span className="text-sm text-muted">{item.meta}</span> : null}
             </div>

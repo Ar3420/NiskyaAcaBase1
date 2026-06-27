@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AttributedText } from "@/components/AttributedText";
 import { DatabasePageLayout, LinkList, Section } from "@/components/DatabasePageLayout";
+import { SpecificityBranch } from "@/components/SpecificityBranch";
 import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClass, getClasses, getEntityRevisions, getPrinciples, getResources, getSubjects } from "@/lib/database";
 import { formatRelatedLinks, parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
@@ -36,6 +37,15 @@ export default async function ClassPage({ params, searchParams }: { params: Prom
   });
   const entityId = entry.id;
   const currentPublished = entry.published;
+  const visibleToc = [
+    entry.overview || isEditing ? "Overview" : null,
+    entry.units.length > 0 || isEditing ? "Units and topics" : null,
+    relatedPrinciples.length > 0 || isEditing ? "Principles" : null,
+    classAssignments.length > 0 || isEditing ? "Assignments and tests" : null,
+    classResources.length > 0 || isEditing ? "Resources" : null,
+    relatedSubjects.length + entry.relatedLinks.length > 0 || isEditing ? "Related links" : null,
+    "Revision history",
+  ].filter((item): item is string => Boolean(item));
 
   async function saveClassAction(formData: FormData) {
     "use server";
@@ -74,7 +84,7 @@ export default async function ClassPage({ params, searchParams }: { params: Prom
       title={entry.title}
       entityType="class"
       slug={entry.slug}
-      toc={["Overview", "Units and topics", "Principles", "Assignments and tests", "Resources", "Related links", "Revision history"]}
+      toc={visibleToc}
       infoboxTheme="class"
       infoRows={[
         { label: "Department", value: entry.department },
@@ -92,9 +102,10 @@ export default async function ClassPage({ params, searchParams }: { params: Prom
           <InfoboxStatic label="Status" value={entry.published ? "Published" : "Draft"} />
         </>
       }
-      specificityTree={<TreeItems items={[entry.title]} />}
+      specificityTree={<SpecificityBranch items={[{ label: entry.title, href: `/classes/${entry.slug}` }]} />}
       related={<LinkList links={[...relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title })), ...entry.relatedLinks]} />}
       relatedEditor={<RelatedLinksEditor form="class-edit-form" links={entry.relatedLinks} />}
+      showRelatedLinks={relatedSubjects.length + entry.relatedLinks.length > 0}
       revisions={revisions}
       isEditing={isEditing}
     >
@@ -129,11 +140,9 @@ export default async function ClassPage({ params, searchParams }: { params: Prom
         </form>
       ) : (
         <>
-          <Section title="Overview"><p><AttributedText revisions={revisions} field="overview" linkTargets={linkTargets}>{entry.overview}</AttributedText></p></Section>
-          <Section title="Units and topics">
-            {entry.units.length === 0 ? (
-              <p className="text-muted">No units or topics have been added yet.</p>
-            ) : (
+          {entry.overview ? <Section title="Overview"><p><AttributedText revisions={revisions} field="overview" linkTargets={linkTargets}>{entry.overview}</AttributedText></p></Section> : null}
+          {entry.units.length > 0 ? (
+            <Section title="Units and topics">
               <div className="not-prose mt-4 space-y-4">
                 {entry.units.map((unit) => (
                   <section key={unit.title}>
@@ -148,34 +157,36 @@ export default async function ClassPage({ params, searchParams }: { params: Prom
                   </section>
                 ))}
               </div>
-            )}
-          </Section>
-          <section id="assignments-and-tests" className="mt-8 border-t border-line pt-5">
-            <h2 className="content-heading">Assignments and tests</h2>
-            <div className="mt-3">
-            <LinkList links={classAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} />
-            </div>
-          </section>
-          <section id="principles" className="mt-8 border-t border-line pt-5">
-            <h2 className="content-heading">Principles</h2>
-            <div className="mt-3">
-            <LinkList links={relatedPrinciples.map((principle) => ({ href: `/principles/${principle.slug}`, label: principle.title }))} />
-            </div>
-          </section>
-          <section id="resources" className="mt-8 border-t border-line pt-5">
-            <h2 className="content-heading">Resources</h2>
-            <div className="mt-3">
-            <LinkList links={classResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} />
-            </div>
-          </section>
+            </Section>
+          ) : null}
+          {classAssignments.length > 0 ? (
+            <section id="assignments-and-tests" className="mt-8 border-t border-line pt-5">
+              <h2 className="content-heading">Assignments and tests</h2>
+              <div className="mt-3">
+              <LinkList links={classAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} />
+              </div>
+            </section>
+          ) : null}
+          {relatedPrinciples.length > 0 ? (
+            <section id="principles" className="mt-8 border-t border-line pt-5">
+              <h2 className="content-heading">Principles</h2>
+              <div className="mt-3">
+              <LinkList links={relatedPrinciples.map((principle) => ({ href: `/principles/${principle.slug}`, label: principle.title }))} />
+              </div>
+            </section>
+          ) : null}
+          {classResources.length > 0 ? (
+            <section id="resources" className="mt-8 border-t border-line pt-5">
+              <h2 className="content-heading">Resources</h2>
+              <div className="mt-3">
+              <LinkList links={classResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} />
+              </div>
+            </section>
+          ) : null}
         </>
       )}
     </DatabasePageLayout>
   );
-}
-
-function TreeItems({ items }: { items: string[] }) {
-  return <ol className="space-y-1 border-l border-line pl-3">{items.map((item) => <li key={item}>{item}</li>)}</ol>;
 }
 
 function textField(formData: FormData, key: string) {

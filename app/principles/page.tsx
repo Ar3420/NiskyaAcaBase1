@@ -125,7 +125,6 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
                   <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                     <div>
                       <h3 className="card-link-heading font-serif text-2xl font-semibold">{entry.title}</h3>
-                      <p className="mt-1 text-sm text-muted">{entry.overview}</p>
                     </div>
                     <span className="text-sm text-muted">{entry.details.length} details</span>
                   </div>

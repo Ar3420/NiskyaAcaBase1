@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AttributedText } from "@/components/AttributedText";
 import { DatabasePageLayout, LinkList, Section } from "@/components/DatabasePageLayout";
+import { SpecificityBranch } from "@/components/SpecificityBranch";
 import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClasses, getEntityRevisions, getPrinciple, getPrinciples, getResources, getSubjects } from "@/lib/database";
 import { formatRelatedLinks, parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
@@ -36,6 +37,16 @@ export default async function PrinciplePage({ params, searchParams }: { params: 
   });
   const entityId = entry.id;
   const currentPublished = entry.published;
+  const visibleToc = [
+    entry.overview || isEditing ? "Overview" : null,
+    entry.details.length > 0 || isEditing ? "Details" : null,
+    relatedClasses.length > 0 || isEditing ? "Related classes" : null,
+    relatedSubjects.length > 0 || isEditing ? "Related subjects" : null,
+    relatedAssignments.length > 0 || isEditing ? "Related assignments" : null,
+    linkedResources.length > 0 || isEditing ? "Linked resources" : null,
+    relatedSubjects.length + entry.relatedLinks.length > 0 || isEditing ? "Related links" : null,
+    "Revision history",
+  ].filter((item): item is string => Boolean(item));
 
   async function savePrincipleAction(formData: FormData) {
     "use server";
@@ -73,7 +84,7 @@ export default async function PrinciplePage({ params, searchParams }: { params: 
       title={entry.title}
       entityType="principle"
       slug={entry.slug}
-      toc={["Overview", "Details", "Related classes", "Related subjects", "Related assignments", "Linked resources", "Related links", "Revision history"]}
+      toc={visibleToc}
       infoboxTheme="principle"
       infoRows={[
         { label: "Classes", value: relatedClasses.length },
@@ -90,9 +101,14 @@ export default async function PrinciplePage({ params, searchParams }: { params: 
           <InfoboxStatic label="Status" value={entry.published ? "Published" : "Draft"} />
         </>
       }
-      specificityTree={<TreeItems items={[relatedClasses[0]?.title ?? "Class TBD", relatedSubjects[0]?.title ?? "Subject TBD", entry.title]} />}
+      specificityTree={<SpecificityBranch items={[
+        relatedClasses[0] ? { label: relatedClasses[0].title, href: `/classes/${relatedClasses[0].slug}` } : { label: "Class TBD" },
+        relatedSubjects[0] ? { label: relatedSubjects[0].title, href: `/subjects/${relatedSubjects[0].slug}` } : { label: "Subject TBD" },
+        { label: entry.title, href: `/principles/${entry.slug}` },
+      ]} />}
       related={<LinkList links={[...relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title })), ...entry.relatedLinks]} />}
       relatedEditor={<RelatedLinksEditor form="principle-edit-form" links={entry.relatedLinks} />}
+      showRelatedLinks={relatedSubjects.length + entry.relatedLinks.length > 0}
       revisions={revisions}
       isEditing={isEditing}
     >
@@ -127,11 +143,9 @@ export default async function PrinciplePage({ params, searchParams }: { params: 
         </form>
       ) : (
         <>
-          <Section title="Overview"><p><AttributedText revisions={revisions} field="overview" linkTargets={linkTargets}>{entry.overview}</AttributedText></p></Section>
-          <Section title="Details">
-            {entry.details.length === 0 ? (
-              <p className="text-muted">No detailed principles, formulas, or laws have been added yet.</p>
-            ) : (
+          {entry.overview ? <Section title="Overview"><p><AttributedText revisions={revisions} field="overview" linkTargets={linkTargets}>{entry.overview}</AttributedText></p></Section> : null}
+          {entry.details.length > 0 ? (
+            <Section title="Details">
               <div className="not-prose mt-5 space-y-6">
                 {entry.details.map((detail) => (
                   <section key={detail.title}>
@@ -142,20 +156,16 @@ export default async function PrinciplePage({ params, searchParams }: { params: 
                   </section>
                 ))}
               </div>
-            )}
-          </Section>
-          <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section>
-          <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section>
-          <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section>
-          <Section title="Linked resources"><LinkList links={linkedResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} /></Section>
+            </Section>
+          ) : null}
+          {relatedClasses.length > 0 ? <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section> : null}
+          {relatedSubjects.length > 0 ? <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section> : null}
+          {relatedAssignments.length > 0 ? <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section> : null}
+          {linkedResources.length > 0 ? <Section title="Linked resources"><LinkList links={linkedResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} /></Section> : null}
         </>
       )}
     </DatabasePageLayout>
   );
-}
-
-function TreeItems({ items }: { items: string[] }) {
-  return <ol className="space-y-1 border-l border-line pl-3">{items.map((item) => <li key={item}>{item}</li>)}</ol>;
 }
 
 function textField(formData: FormData, key: string) {

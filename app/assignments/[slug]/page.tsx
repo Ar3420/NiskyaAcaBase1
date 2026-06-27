@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AttributedText } from "@/components/AttributedText";
 import { DatabasePageLayout, LinkList, Section } from "@/components/DatabasePageLayout";
 import { InlineEditPanel } from "@/components/InlineEditPanel";
+import { SpecificityBranch } from "@/components/SpecificityBranch";
 import { getAssignment, getClasses, getEntityRevisions, getPrinciples, getResources, getSubjects } from "@/lib/database";
 import { formatRelatedLinks } from "@/lib/editParsing";
 import { buildDatabaseLinkTargets } from "@/lib/linkTargets";
@@ -32,13 +33,22 @@ export default async function AssignmentPage({ params, searchParams }: { params:
     resources,
     currentHref: `/assignments/${entry.slug}`,
   });
+  const isEditing = resolvedSearchParams?.edit === "1";
+  const visibleToc = [
+    entry.description || isEditing ? "Description" : null,
+    relatedSubjects.length > 0 || isEditing ? "Related subjects" : null,
+    relatedPrinciples.length > 0 || isEditing ? "Related principles" : null,
+    linkedResources.length > 0 || isEditing ? "Relevant resources" : null,
+    relatedSubjects.length + entry.relatedLinks.length > 0 || isEditing ? "Related links" : null,
+    "Revision history",
+  ].filter((item): item is string => Boolean(item));
 
   return (
     <DatabasePageLayout
       title={entry.title}
       entityType="assignment"
       slug={entry.slug}
-      toc={["Description", "Related subjects", "Related principles", "Relevant resources", "Related links", "Revision history"]}
+      toc={visibleToc}
       infoboxTheme="assignment"
       infoRows={[
         { label: "Type", value: entry.assignmentType },
@@ -61,23 +71,25 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           <InfoboxStatic label="Status" value={entry.published ? "Published" : "Draft"} />
         </>
       }
-      specificityTree={<TreeItems items={[course?.title ?? "Class TBD", relatedSubjects[0]?.title ?? "Subject TBD", relatedPrinciples[0]?.title ?? "Principle TBD", entry.title]} />}
+      specificityTree={<SpecificityBranch items={[
+        course ? { label: course.title, href: `/classes/${course.slug}` } : { label: "Class TBD" },
+        relatedSubjects[0] ? { label: relatedSubjects[0].title, href: `/subjects/${relatedSubjects[0].slug}` } : { label: "Subject TBD" },
+        relatedPrinciples[0] ? { label: relatedPrinciples[0].title, href: `/principles/${relatedPrinciples[0].slug}` } : { label: "Principle TBD" },
+        { label: entry.title, href: `/assignments/${entry.slug}` },
+      ]} />}
       related={<LinkList links={[...relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title })), ...entry.relatedLinks]} />}
       relatedEditor={<RelatedLinksEditor form="assignment-edit-form" links={entry.relatedLinks} />}
+      showRelatedLinks={relatedSubjects.length + entry.relatedLinks.length > 0}
       revisions={revisions}
-      isEditing={resolvedSearchParams?.edit === "1"}
+      isEditing={isEditing}
       editPanel={<InlineEditPanel entityType="assignment" entry={entry} error={resolvedSearchParams?.error} formId="assignment-edit-form" />}
     >
-      <Section title="Description"><p><AttributedText revisions={revisions} field="description" linkTargets={linkTargets}>{entry.description}</AttributedText></p></Section>
-      <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section>
-      <Section title="Related principles"><LinkList links={relatedPrinciples.map((principle) => ({ href: `/principles/${principle.slug}`, label: principle.title }))} /></Section>
-      <Section title="Relevant resources"><LinkList links={linkedResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} /></Section>
+      {entry.description ? <Section title="Description"><p><AttributedText revisions={revisions} field="description" linkTargets={linkTargets}>{entry.description}</AttributedText></p></Section> : null}
+      {relatedSubjects.length > 0 ? <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section> : null}
+      {relatedPrinciples.length > 0 ? <Section title="Related principles"><LinkList links={relatedPrinciples.map((principle) => ({ href: `/principles/${principle.slug}`, label: principle.title }))} /></Section> : null}
+      {linkedResources.length > 0 ? <Section title="Relevant resources"><LinkList links={linkedResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} /></Section> : null}
     </DatabasePageLayout>
   );
-}
-
-function TreeItems({ items }: { items: string[] }) {
-  return <ol className="space-y-1 border-l border-line pl-3">{items.map((item) => <li key={item}>{item}</li>)}</ol>;
 }
 
 function InfoboxInput({ form, label, name, defaultValue, type = "text" }: { form: string; label: string; name: string; defaultValue: string; type?: string }) {

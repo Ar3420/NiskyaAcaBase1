@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AttributedText } from "@/components/AttributedText";
 import { DatabasePageLayout, LinkList, Section } from "@/components/DatabasePageLayout";
+import { SpecificityBranch } from "@/components/SpecificityBranch";
 import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClasses, getEntityRevisions, getPrinciples, getResources, getSubject, getSubjects } from "@/lib/database";
 import { formatRelatedLinks, parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
@@ -36,6 +37,16 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
   });
   const entityId = entry.id;
   const currentPublished = entry.published;
+  const visibleToc = [
+    entry.overview || isEditing ? "Overview" : null,
+    entry.subtopics.length > 0 || isEditing ? "Subtopics" : null,
+    relatedPrinciples.length > 0 || isEditing ? "Principles" : null,
+    relatedClasses.length > 0 || isEditing ? "Related classes" : null,
+    relatedAssignments.length > 0 || isEditing ? "Related assignments" : null,
+    linkedResources.length > 0 || isEditing ? "Linked resources" : null,
+    relatedClasses.length + entry.relatedLinks.length > 0 || isEditing ? "Related links" : null,
+    "Revision history",
+  ].filter((item): item is string => Boolean(item));
 
   async function saveSubjectAction(formData: FormData) {
     "use server";
@@ -72,7 +83,7 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
       title={entry.title}
       entityType="subject"
       slug={entry.slug}
-      toc={["Overview", "Subtopics", "Principles", "Related classes", "Related assignments", "Linked resources", "Related links", "Revision history"]}
+      toc={visibleToc}
       infoboxTheme="subject"
       infoRows={[
         { label: "Classes", value: relatedClasses.length },
@@ -89,9 +100,13 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
           <InfoboxStatic label="Status" value={entry.published ? "Published" : "Draft"} />
         </>
       }
-      specificityTree={<TreeItems items={[relatedClasses[0]?.title ?? "Class TBD", entry.title]} />}
+      specificityTree={<SpecificityBranch items={[
+        relatedClasses[0] ? { label: relatedClasses[0].title, href: `/classes/${relatedClasses[0].slug}` } : { label: "Class TBD" },
+        { label: entry.title, href: `/subjects/${entry.slug}` },
+      ]} />}
       related={<LinkList links={[...relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title })), ...entry.relatedLinks]} />}
       relatedEditor={<RelatedLinksEditor form="subject-edit-form" links={entry.relatedLinks} />}
+      showRelatedLinks={relatedClasses.length + entry.relatedLinks.length > 0}
       revisions={revisions}
       isEditing={isEditing}
     >
@@ -126,11 +141,9 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
         </form>
       ) : (
         <>
-          <Section title="Overview"><p><AttributedText revisions={revisions} field="overview" linkTargets={linkTargets}>{entry.overview}</AttributedText></p></Section>
-          <Section title="Subtopics">
-            {entry.subtopics.length === 0 ? (
-              <p className="text-muted">No subtopics have been added yet.</p>
-            ) : (
+          {entry.overview ? <Section title="Overview"><p><AttributedText revisions={revisions} field="overview" linkTargets={linkTargets}>{entry.overview}</AttributedText></p></Section> : null}
+          {entry.subtopics.length > 0 ? (
+            <Section title="Subtopics">
               <div className="not-prose mt-5 space-y-6">
                 {entry.subtopics.map((topic) => (
                   <section key={topic.title}>
@@ -141,20 +154,16 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
                   </section>
                 ))}
               </div>
-            )}
-          </Section>
-          <Section title="Principles"><LinkList links={relatedPrinciples.map((principle) => ({ href: `/principles/${principle.slug}`, label: principle.title }))} /></Section>
-          <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section>
-          <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section>
-          <Section title="Linked resources"><LinkList links={linkedResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} /></Section>
+            </Section>
+          ) : null}
+          {relatedPrinciples.length > 0 ? <Section title="Principles"><LinkList links={relatedPrinciples.map((principle) => ({ href: `/principles/${principle.slug}`, label: principle.title }))} /></Section> : null}
+          {relatedClasses.length > 0 ? <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section> : null}
+          {relatedAssignments.length > 0 ? <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section> : null}
+          {linkedResources.length > 0 ? <Section title="Linked resources"><LinkList links={linkedResources.map((resource) => ({ href: `/resources/${resource.slug}`, label: resource.title }))} /></Section> : null}
         </>
       )}
     </DatabasePageLayout>
   );
-}
-
-function TreeItems({ items }: { items: string[] }) {
-  return <ol className="space-y-1 border-l border-line pl-3">{items.map((item) => <li key={item}>{item}</li>)}</ol>;
 }
 
 function textField(formData: FormData, key: string) {

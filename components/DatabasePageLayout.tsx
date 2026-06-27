@@ -19,6 +19,7 @@ export function DatabasePageLayout({
   children,
   related,
   relatedEditor,
+  showRelatedLinks = true,
   specificityTree,
   infoboxEditor,
   revisions,
@@ -34,6 +35,7 @@ export function DatabasePageLayout({
   children: ReactNode;
   related: ReactNode;
   relatedEditor?: ReactNode;
+  showRelatedLinks?: boolean;
   specificityTree?: ReactNode;
   infoboxEditor?: ReactNode;
   revisions: Revision[];
@@ -88,10 +90,12 @@ export function DatabasePageLayout({
             {children}
           </div>
 
-          <section id="related-links" className="mt-8 border-t border-line pt-5">
-            <h2 className="content-heading">Related links</h2>
-            <div className="mt-3">{isEditing && relatedEditor ? relatedEditor : related}</div>
-          </section>
+          {isEditing || showRelatedLinks ? (
+            <section id="related-links" className="mt-8 border-t border-line pt-5">
+              <h2 className="content-heading">Related links</h2>
+              <div className="mt-3">{isEditing && relatedEditor ? relatedEditor : related}</div>
+            </section>
+          ) : null}
 
           <section id="revision-history" className="mt-8 border-t border-line pt-5">
             <details>
