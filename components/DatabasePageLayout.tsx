@@ -44,7 +44,7 @@ export function DatabasePageLayout({
   infoboxTheme?: InfoboxTheme;
 }) {
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[180px_1fr_280px]">
         <aside className="hidden lg:block">

@@ -1,8 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { getHelixSession } from "@/lib/auth";
+import { TextSizeSelect } from "./TextSizeSelect";
 
-export function SiteNav({ variant = "logo" }: { variant?: "logo" | "home" }) {
+export async function SiteNav({ variant = "logo" }: { variant?: "logo" | "home" }) {
+  const session = await getHelixSession();
+
   return (
     <header className="border-b border-line bg-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
@@ -35,7 +39,14 @@ export function SiteNav({ variant = "logo" }: { variant?: "logo" | "home" }) {
           <Link href="/subjects" className="hover:text-nisky">Subjects</Link>
           <Link href="/principles" className="hover:text-nisky">Principles</Link>
           <Link href="/homework" className="hover:text-nisky">Homework</Link>
-          <Link href="/login" className="hover:text-nisky">Login</Link>
+          <TextSizeSelect />
+          {session ? (
+            <Link href="/account" className="rounded border border-line bg-paper px-2 py-1 font-mono text-xs text-ink no-underline">
+              {session.memberId}
+            </Link>
+          ) : (
+            <Link href="/login" className="hover:text-nisky">Login</Link>
+          )}
         </nav>
       </div>
     </header>

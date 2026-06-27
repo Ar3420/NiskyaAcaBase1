@@ -12,8 +12,8 @@ export function SpecificityBranch({ items }: { items: SpecificityBranchItem[] })
   return (
     <ol className="space-y-1 text-sm">
       {visibleItems.map((item, index) => (
-        <li key={`${item.label}-${index}`} className="flex items-start gap-2">
-          {index > 0 ? <span className="mt-0.5 text-muted">→</span> : null}
+        <li key={`${item.label}-${index}`} className="flex items-start gap-2" style={{ marginLeft: `${index * 0.9}rem` }}>
+          {index > 0 ? <span className="mt-0.5 text-muted">-&gt;</span> : null}
           {item.href ? (
             <Link href={item.href} className="font-medium">
               {item.label}
