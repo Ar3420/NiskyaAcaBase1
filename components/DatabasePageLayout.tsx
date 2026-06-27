@@ -62,7 +62,7 @@ export function DatabasePageLayout({
           </div>
         </aside>
 
-        <article className="border border-line bg-white p-5 md:p-8">
+        <article className="bg-white p-5 md:p-8">
           <div className="mb-4 flex flex-col border-b border-line pb-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.14em] text-muted">Database page</p>

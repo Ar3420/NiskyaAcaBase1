@@ -13,10 +13,10 @@ export default async function HistoryPage({ params }: { params: Promise<{ entity
   const revisions = await getEntityRevisions(entityType as EntityType, entry.id);
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto max-w-4xl px-4 py-8">
-        <section className="border border-line bg-white p-6">
+        <section className="bg-white p-6">
           <p className="text-xs uppercase tracking-[0.14em] text-muted">Page-level accountability</p>
           <h1 className="font-serif text-4xl font-semibold">Revision History</h1>
           <p className="mt-2 text-muted">{"title" in entry ? entry.title : slug}</p>

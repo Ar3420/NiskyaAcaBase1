@@ -23,10 +23,10 @@ export default async function LoginPage({ searchParams }: { searchParams?: Promi
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <section className="border border-line bg-white p-6">
+        <section className="bg-white p-6">
           <p className="text-xs uppercase tracking-[0.14em] text-muted">Helix member access</p>
           <h1 className="font-serif text-4xl font-semibold">Login</h1>
 

@@ -33,10 +33,10 @@ const navCards = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav variant="home" />
       <main className="mx-auto max-w-6xl px-4 py-10">
-        <section className="border border-line bg-white px-5 py-10 text-center">
+        <section className="bg-white px-5 py-10 text-center">
           <Image
             src="/na-database-logo.png"
             alt="Niskayuna Academic Database logo"

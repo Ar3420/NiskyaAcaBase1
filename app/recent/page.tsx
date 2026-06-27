@@ -19,7 +19,7 @@ export default async function RecentPage() {
   );
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <p className="text-xs uppercase tracking-[0.14em] text-muted">Revision activity</p>
@@ -30,7 +30,7 @@ export default async function RecentPage() {
 
         <div className="mt-8 grid gap-5 md:grid-cols-2">
           {activityBySection.map((section) => (
-            <section key={section.entityType} className="border border-line bg-white p-5">
+            <section key={section.entityType} className="bg-white p-5">
               <h2 className="content-heading">{section.title}</h2>
               <p className="mt-2 text-sm text-muted">{section.description}</p>
               <RecentList entries={section.entries} />

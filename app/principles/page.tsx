@@ -2,18 +2,22 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { getHelixSession } from "@/lib/auth";
-import { getClasses, getPrinciples, getSubjects } from "@/lib/database";
-import { referenceTargets, resolveReferences } from "@/lib/editParsing";
+import { getAssignments, getClasses, getPrinciples, getResources, getSubjects } from "@/lib/database";
+import { parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
+import { buildDatabaseLinkTargets } from "@/lib/linkTargets";
 import { createEntityFromSnapshot } from "@/lib/mutations";
 
 export default async function PrinciplesPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
   const resolvedSearchParams = await searchParams;
-  const [principles, classes, subjects, session] = await Promise.all([
+  const [principles, classes, subjects, assignments, resources, session] = await Promise.all([
     getPrinciples(),
     getClasses(),
     getSubjects(),
+    getAssignments(),
+    getResources(),
     getHelixSession(),
   ]);
+  const linkTargets = buildDatabaseLinkTargets({ classes, subjects, principles, assignments, resources });
   const query = resolvedSearchParams?.q?.trim() ?? "";
   const normalized = query.toLowerCase();
   const filteredPrinciples = principles
@@ -42,7 +46,7 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
       relatedSubjectSlugs: resolveReferences(textField(formData, "relatedSubjectSlugs"), referenceTargets(subjects, "subjects")),
       relatedAssignmentSlugs: [],
       resourceSlugs: [],
-      relatedLinks: [],
+      relatedLinks: parseManualRelatedLinks(textField(formData, "relatedLinks"), linkTargets),
       published: true,
     };
     const result = await createEntityFromSnapshot({
@@ -56,7 +60,7 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[190px_1fr_280px]">
         <aside className="hidden lg:block">
@@ -70,7 +74,7 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
           </div>
         </aside>
 
-        <article className="border border-line bg-white p-5 md:p-8">
+        <article className="bg-white p-5 md:p-8">
           <p className="text-xs uppercase tracking-[0.14em] text-muted">Database category page</p>
           <h1 className="border-b border-line pb-3 font-serif text-4xl font-semibold">Principles</h1>
 
@@ -117,6 +121,7 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
                   <input name="relatedClassSlugs" placeholder="Related class links, titles, or slugs" className="border border-line bg-white px-3 py-2 text-sm" />
                   <input name="relatedSubjectSlugs" placeholder="Related subject links, titles, or slugs" className="border border-line bg-white px-3 py-2 text-sm" />
                   <textarea name="overview" rows={3} placeholder="Short principle overview" className="border border-line bg-white px-3 py-2 text-sm" />
+                  <textarea name="relatedLinks" rows={3} placeholder="Related links, one per line: page title, page URL, or Label | URL" className="border border-line bg-white px-3 py-2 text-sm" />
                   <button className="w-fit border border-nisky bg-nisky px-4 py-2 text-sm font-medium text-white">Create principle</button>
                 </form>
               ) : (

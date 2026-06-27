@@ -83,7 +83,7 @@ export default async function HomeworkPage({ searchParams }: { searchParams?: Pr
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto max-w-7xl px-4 py-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -104,7 +104,7 @@ export default async function HomeworkPage({ searchParams }: { searchParams?: Pr
           </div>
         </div>
 
-        <form className="mt-6 grid gap-3 border border-line bg-white p-4 md:grid-cols-7">
+        <form className="mt-6 grid gap-3 bg-white p-4 md:grid-cols-7">
           <input type="hidden" name="view" value={view} />
           <select name="class" defaultValue={selectedClass} className="border border-line bg-paper px-3 py-2 text-sm">
             <option value="">All classes</option>
@@ -174,7 +174,7 @@ export default async function HomeworkPage({ searchParams }: { searchParams?: Pr
         </details>
 
         {view === "calendar" ? (
-          <section className="mt-6 border border-line bg-white">
+          <section className="mt-6 bg-white">
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
               <Link href={buildHomeworkHref(resolvedSearchParams, { view: "calendar", month: formatMonth(previousMonth) })} className="inline-flex items-center gap-1 text-sm text-muted hover:text-nisky">
                 <ChevronLeft className="h-4 w-4" /> Previous
@@ -204,7 +204,7 @@ export default async function HomeworkPage({ searchParams }: { searchParams?: Pr
             </div>
           </section>
         ) : (
-          <div className="mt-6 divide-y divide-line border border-line bg-white">
+          <div className="mt-6 divide-y divide-line bg-white">
             {filtered.map((entry) => <AssignmentRow key={entry.id} entry={entry} classes={classes} />)}
           </div>
         )}

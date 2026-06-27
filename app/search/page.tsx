@@ -9,7 +9,7 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
   const results = await searchEntries(query);
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="font-serif text-4xl font-semibold">Search</h1>
@@ -17,7 +17,7 @@ export default async function SearchPage({ searchParams }: { searchParams?: Prom
         <p className="mt-6 text-sm text-muted">
           {query ? `${results.length} result${results.length === 1 ? "" : "s"} for "${query}"` : "Showing all searchable entries."}
         </p>
-        <div className="mt-4 divide-y divide-line border border-line bg-white">
+        <div className="mt-4 divide-y divide-line bg-white">
           {results.map((result) => (
             <Link key={result.href} href={result.href} className="block p-4 hover:bg-paper">
               <div className="text-xs uppercase tracking-[0.12em] text-muted">{result.type}</div>

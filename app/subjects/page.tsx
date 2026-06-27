@@ -48,7 +48,7 @@ export default async function SubjectsPage({ searchParams }: { searchParams?: Pr
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[190px_1fr_280px]">
         <aside className="hidden lg:block">
@@ -62,7 +62,7 @@ export default async function SubjectsPage({ searchParams }: { searchParams?: Pr
           </div>
         </aside>
 
-        <article className="border border-line bg-white p-5 md:p-8">
+        <article className="bg-white p-5 md:p-8">
           <p className="text-xs uppercase tracking-[0.14em] text-muted">Database category page</p>
           <h1 className="border-b border-line pb-3 font-serif text-4xl font-semibold">Subjects</h1>
 

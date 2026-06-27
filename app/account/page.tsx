@@ -5,10 +5,10 @@ export default async function AccountPage() {
   const session = await getHelixSession();
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-white text-ink">
       <SiteNav />
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <section className="border border-line bg-white p-6">
+        <section className="bg-white p-6">
           <h1 className="font-serif text-4xl font-semibold">Account</h1>
           {session ? (
             <>

@@ -5,7 +5,7 @@ import { getAssignments, getClasses } from "@/lib/database";
 export default async function AssignmentsPage() {
   const [assignments, classes] = await Promise.all([getAssignments(), getClasses()]);
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-white">
       <SiteNav />
       <IndexPage
         eyebrow="Database index"
