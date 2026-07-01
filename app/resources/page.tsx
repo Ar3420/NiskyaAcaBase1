@@ -2,11 +2,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { FileText, LinkIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import { getHelixSession } from "@/lib/auth";
+import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClasses, getPrinciples, getResources, getSubjects } from "@/lib/database";
 import { parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
 import { buildDatabaseLinkTargets } from "@/lib/linkTargets";
-import { createEntityFromSnapshot } from "@/lib/mutations";
+import { createEntityFromSnapshot, deleteEntityPage } from "@/lib/mutations";
 import type { AssignmentEntry, ClassEntry, ResourceEntry, SubjectEntry } from "@/lib/types";
 
 const resourceTypes = ["notes", "study guide", "practice", "packet", "template", "video", "website", "document", "other"];
@@ -34,6 +34,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
     getAssignments(),
     getHelixSession(),
   ]);
+  const canDelete = canModerate(session);
   const linkTargets = buildDatabaseLinkTargets({ classes, subjects, principles, assignments, resources });
   const normalizedQuery = query.toLowerCase();
   const filteredResources = resources
@@ -82,6 +83,16 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
 
     if (!result.ok || !result.slug) redirect(`/resources?error=${encodeURIComponent(result.error ?? "Create failed")}`);
     redirect(`/resources/${result.slug}?edit=1`);
+  }
+
+  async function deleteResourceAction(formData: FormData) {
+    "use server";
+
+    const activeSession = await getHelixSession();
+    if (!canModerate(activeSession)) redirect("/login?next=/resources");
+
+    await deleteEntityPage({ entityType: "resource", entityId: textField(formData, "entityId") });
+    redirect("/resources");
   }
 
   return (
@@ -165,6 +176,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
                 classes={classes}
                 subjects={subjects}
                 assignments={assignments}
+                canDelete={canDelete}
+                deleteAction={deleteResourceAction}
               />
             ))
           )}
@@ -179,11 +192,15 @@ function ResourceRow({
   classes,
   subjects,
   assignments,
+  canDelete,
+  deleteAction,
 }: {
   entry: ResourceEntry;
   classes: ClassEntry[];
   subjects: SubjectEntry[];
   assignments: AssignmentEntry[];
+  canDelete: boolean;
+  deleteAction: (formData: FormData) => Promise<void>;
 }) {
   const relatedClasses = classes.filter((course) => entry.relatedClassSlugs.includes(course.slug));
   const relatedSubjects = subjects.filter((subject) => entry.relatedSubjectSlugs.includes(subject.slug));
@@ -191,22 +208,32 @@ function ResourceRow({
   const primaryRelation = [...relatedClasses, ...relatedSubjects, ...relatedAssignments].map((item) => item.title).join(" - ") || "Unlinked";
 
   return (
-    <Link href={`/resources/${entry.slug}`} className="grid gap-2 p-4 hover:bg-paper md:grid-cols-[170px_1fr_190px]">
-      <span className="inline-flex items-start gap-2 text-sm font-medium capitalize">
-        <FileText className="mt-0.5 h-4 w-4 text-nisky" aria-hidden="true" />
-        {entry.resourceType}
-      </span>
-      <span>
-        <strong className="font-serif text-xl">{entry.title}</strong>
-        {entry.externalUrl || entry.fileUrl ? (
-          <span className="mt-2 inline-flex items-center gap-1 text-xs text-gold">
-            <LinkIcon className="h-3 w-3" aria-hidden="true" />
-            {entry.externalUrl ? "External link" : "Attached file"}
-          </span>
-        ) : null}
-      </span>
-      <span className="text-sm text-muted">{primaryRelation}</span>
-    </Link>
+    <div className="grid gap-2 p-4 hover:bg-paper md:grid-cols-[170px_1fr_190px_auto]">
+      <Link href={`/resources/${entry.slug}`} className="contents">
+        <span className="inline-flex items-start gap-2 text-sm font-medium capitalize">
+          <FileText className="mt-0.5 h-4 w-4 text-nisky" aria-hidden="true" />
+          {entry.resourceType}
+        </span>
+        <span>
+          <strong className="font-serif text-xl">{entry.title}</strong>
+          {entry.externalUrl || entry.fileUrl ? (
+            <span className="mt-2 inline-flex items-center gap-1 text-xs text-gold">
+              <LinkIcon className="h-3 w-3" aria-hidden="true" />
+              {entry.externalUrl ? "External link" : "Attached file"}
+            </span>
+          ) : null}
+        </span>
+        <span className="text-sm text-muted">{primaryRelation}</span>
+      </Link>
+      {canDelete ? (
+        <form action={deleteAction}>
+          <input type="hidden" name="entityId" value={entry.id} />
+          <button className="border border-nisky px-3 py-1 text-sm font-medium text-nisky hover:bg-nisky hover:text-white">
+            Delete
+          </button>
+        </form>
+      ) : null}
+    </div>
   );
 }
 

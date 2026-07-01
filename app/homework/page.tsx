@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CalendarDays, ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import { getHelixSession } from "@/lib/auth";
+import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClasses, getPrinciples, getSubjects } from "@/lib/database";
-import { createEntityFromSnapshot } from "@/lib/mutations";
+import { createEntityFromSnapshot, deleteEntityPage } from "@/lib/mutations";
 import type { AssignmentEntry, ClassEntry } from "@/lib/types";
 
 const assignmentTypes = ["homework", "quiz", "test", "project", "lab", "reading", "other"];
@@ -37,6 +37,7 @@ export default async function HomeworkPage({ searchParams }: { searchParams?: Pr
     getPrinciples(),
     getHelixSession(),
   ]);
+  const canDelete = canModerate(session);
 
   const filtered = assignments
     .filter((entry) => !selectedClass || entry.classSlug === selectedClass)
@@ -80,6 +81,16 @@ export default async function HomeworkPage({ searchParams }: { searchParams?: Pr
     });
     if (!result.ok || !result.slug) redirect(`/homework?error=${encodeURIComponent(result.error ?? "Create failed")}`);
     redirect(`/assignments/${result.slug}?edit=1`);
+  }
+
+  async function deleteHomeworkAction(formData: FormData) {
+    "use server";
+
+    const activeSession = await getHelixSession();
+    if (!canModerate(activeSession)) redirect("/login?next=/homework");
+
+    await deleteEntityPage({ entityType: "assignment", entityId: textField(formData, "entityId") });
+    redirect("/homework");
   }
 
   return (
@@ -205,7 +216,7 @@ export default async function HomeworkPage({ searchParams }: { searchParams?: Pr
           </section>
         ) : (
           <div className="mt-6 divide-y divide-line bg-white">
-            {filtered.map((entry) => <AssignmentRow key={entry.id} entry={entry} classes={classes} />)}
+            {filtered.map((entry) => <AssignmentRow key={entry.id} entry={entry} classes={classes} canDelete={canDelete} deleteAction={deleteHomeworkAction} />)}
           </div>
         )}
       </main>
@@ -223,16 +234,36 @@ function CalendarAssignment({ entry, classes }: { entry: AssignmentEntry; classe
   );
 }
 
-function AssignmentRow({ entry, classes }: { entry: AssignmentEntry; classes: ClassEntry[] }) {
+function AssignmentRow({
+  entry,
+  classes,
+  canDelete,
+  deleteAction,
+}: {
+  entry: AssignmentEntry;
+  classes: ClassEntry[];
+  canDelete: boolean;
+  deleteAction: (formData: FormData) => Promise<void>;
+}) {
   const course = classes.find((item) => item.slug === entry.classSlug);
   return (
-    <Link href={`/assignments/${entry.slug}`} className="grid gap-2 p-4 hover:bg-paper md:grid-cols-[160px_1fr_170px]">
-      <span className="text-sm font-medium">{new Date(`${entry.dueDate}T12:00:00`).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
-      <span>
-        <strong className="font-serif text-xl">{entry.title}</strong>
-      </span>
-      <span className="text-sm text-muted">{course?.title} - {entry.assignmentType}</span>
-    </Link>
+    <div className="grid gap-2 p-4 hover:bg-paper md:grid-cols-[160px_1fr_170px_auto]">
+      <Link href={`/assignments/${entry.slug}`} className="contents">
+        <span className="text-sm font-medium">{new Date(`${entry.dueDate}T12:00:00`).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
+        <span>
+          <strong className="font-serif text-xl">{entry.title}</strong>
+        </span>
+        <span className="text-sm text-muted">{course?.title} - {entry.assignmentType}</span>
+      </Link>
+      {canDelete ? (
+        <form action={deleteAction}>
+          <input type="hidden" name="entityId" value={entry.id} />
+          <button className="border border-nisky px-3 py-1 text-sm font-medium text-nisky hover:bg-nisky hover:text-white">
+            Delete
+          </button>
+        </form>
+      ) : null}
+    </div>
   );
 }
 

@@ -1,23 +1,34 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
-import { getHelixSession } from "@/lib/auth";
+import { canModerate, getHelixSession } from "@/lib/auth";
 import { getClasses } from "@/lib/database";
-import { createEntityFromSnapshot } from "@/lib/mutations";
+import { createEntityFromSnapshot, deleteEntityPage } from "@/lib/mutations";
 
-export default async function ClassesPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
+export default async function ClassesPage({ searchParams }: { searchParams?: Promise<{ q?: string; department?: string; organization?: string }> }) {
   const resolvedSearchParams = await searchParams;
   const [classes, session] = await Promise.all([getClasses(), getHelixSession()]);
+  const canDelete = canModerate(session);
   const query = resolvedSearchParams?.q?.trim() ?? "";
+  const selectedDepartment = resolvedSearchParams?.department ?? "";
+  const organization = resolvedSearchParams?.organization === "department" ? "department" : "alphabetical";
+  const departments = Array.from(new Set(classes.map((entry) => entry.department).filter(Boolean))).sort((a, b) => a.localeCompare(b));
   const normalized = query.toLowerCase();
   const filteredClasses = classes
+    .filter((entry) => !selectedDepartment || entry.department === selectedDepartment)
     .filter((entry) =>
       [entry.title, entry.department, entry.overview, entry.gradeLevels.join(" "), entry.units.map((unit) => `${unit.title} ${unit.body}`).join(" ")]
         .join(" ")
         .toLowerCase()
         .includes(normalized),
     )
-    .sort((a, b) => a.title.localeCompare(b.title));
+    .sort((a, b) => {
+      if (organization === "department") {
+        const departmentSort = a.department.localeCompare(b.department);
+        if (departmentSort !== 0) return departmentSort;
+      }
+      return a.title.localeCompare(b.title);
+    });
 
   async function createClassAction(formData: FormData) {
     "use server";
@@ -47,6 +58,16 @@ export default async function ClassesPage({ searchParams }: { searchParams?: Pro
     });
     if (!result.ok || !result.slug) redirect(`/classes?error=${encodeURIComponent(result.error ?? "Create failed")}`);
     redirect(`/classes/${result.slug}?edit=1`);
+  }
+
+  async function deleteClassAction(formData: FormData) {
+    "use server";
+
+    const activeSession = await getHelixSession();
+    if (!canModerate(activeSession)) redirect("/login?next=/classes");
+
+    await deleteEntityPage({ entityType: "class", entityId: textField(formData, "entityId") });
+    redirect("/classes");
   }
 
   return (
@@ -96,8 +117,16 @@ export default async function ClassesPage({ searchParams }: { searchParams?: Pro
                   {query ? ` for "${query}"` : ""}.
                 </p>
               </div>
-              <form action="/classes" className="flex w-full max-w-md items-center gap-2 rounded border border-line bg-paper px-3 py-2">
-                <input name="q" defaultValue={query} placeholder="Search classes" className="w-full bg-transparent text-sm outline-none" />
+              <form action="/classes" className="grid w-full max-w-2xl gap-2 rounded border border-line bg-paper p-2 md:grid-cols-[1fr_160px_170px_auto]">
+                <input name="q" defaultValue={query} placeholder="Search classes" className="bg-transparent px-1 text-sm outline-none" />
+                <select name="department" defaultValue={selectedDepartment} className="border border-line bg-white px-2 py-1 text-sm">
+                  <option value="">All departments</option>
+                  {departments.map((department) => <option key={department} value={department}>{department}</option>)}
+                </select>
+                <select name="organization" defaultValue={organization} className="border border-line bg-white px-2 py-1 text-sm">
+                  <option value="alphabetical">Alphabetical</option>
+                  <option value="department">Department based</option>
+                </select>
                 <button className="text-sm font-medium text-nisky">Search</button>
               </form>
             </div>
@@ -123,16 +152,28 @@ export default async function ClassesPage({ searchParams }: { searchParams?: Pro
             </details>
 
             <div className="mt-5 divide-y divide-line border border-line">
-              {filteredClasses.map((entry) => (
-                <Link key={entry.slug} href={`/classes/${entry.slug}`} className="card-link block p-4 hover:bg-paper">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <h3 className="card-link-heading font-serif text-2xl font-semibold">{entry.title}</h3>
+              {filteredClasses.map((entry, index) => {
+                const showDepartmentMarker = organization === "department" && entry.department !== filteredClasses[index - 1]?.department;
+                return (
+                  <div key={entry.slug} className="p-4 hover:bg-paper">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <Link href={`/classes/${entry.slug}`} className="card-link block">
+                        {showDepartmentMarker ? <div className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted">{entry.department}</div> : null}
+                        <h3 className="card-link-heading font-serif text-2xl font-semibold">{entry.title}</h3>
+                        <span className="mt-1 block text-sm text-muted">{entry.department} - Grades {entry.gradeLevels.join(", ")}</span>
+                      </Link>
+                      {canDelete ? (
+                        <form action={deleteClassAction}>
+                          <input type="hidden" name="entityId" value={entry.id} />
+                          <button className="border border-nisky px-3 py-1 text-sm font-medium text-nisky hover:bg-nisky hover:text-white">
+                            Delete
+                          </button>
+                        </form>
+                      ) : null}
                     </div>
-                    <span className="text-sm text-muted">{entry.department} · Grades {entry.gradeLevels.join(", ")}</span>
                   </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           </section>
         </article>

@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
-import { getHelixSession } from "@/lib/auth";
+import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClasses, getPrinciples, getResources, getSubjects } from "@/lib/database";
 import { parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
 import { buildDatabaseLinkTargets } from "@/lib/linkTargets";
-import { createEntityFromSnapshot } from "@/lib/mutations";
+import { createEntityFromSnapshot, deleteEntityPage } from "@/lib/mutations";
 
 export default async function PrinciplesPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
   const resolvedSearchParams = await searchParams;
@@ -17,6 +17,7 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
     getResources(),
     getHelixSession(),
   ]);
+  const canDelete = canModerate(session);
   const linkTargets = buildDatabaseLinkTargets({ classes, subjects, principles, assignments, resources });
   const query = resolvedSearchParams?.q?.trim() ?? "";
   const normalized = query.toLowerCase();
@@ -57,6 +58,16 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
     });
     if (!result.ok || !result.slug) redirect(`/principles?error=${encodeURIComponent(result.error ?? "Create failed")}`);
     redirect(`/principles/${result.slug}?edit=1`);
+  }
+
+  async function deletePrincipleAction(formData: FormData) {
+    "use server";
+
+    const activeSession = await getHelixSession();
+    if (!canModerate(activeSession)) redirect("/login?next=/principles");
+
+    await deleteEntityPage({ entityType: "principle", entityId: textField(formData, "entityId") });
+    redirect("/principles");
   }
 
   return (
@@ -133,14 +144,22 @@ export default async function PrinciplesPage({ searchParams }: { searchParams?: 
 
             <div className="mt-5 divide-y divide-line border border-line">
               {filteredPrinciples.map((entry) => (
-                <Link key={entry.slug} href={`/principles/${entry.slug}`} className="card-link block p-4 hover:bg-paper">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div>
+                <div key={entry.slug} className="p-4 hover:bg-paper">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <Link href={`/principles/${entry.slug}`} className="card-link block">
                       <h3 className="card-link-heading font-serif text-2xl font-semibold">{entry.title}</h3>
-                    </div>
-                    <span className="text-sm text-muted">{entry.details.length} details</span>
+                      <span className="mt-1 block text-sm text-muted">{entry.details.length} details</span>
+                    </Link>
+                    {canDelete ? (
+                      <form action={deletePrincipleAction}>
+                        <input type="hidden" name="entityId" value={entry.id} />
+                        <button className="border border-nisky px-3 py-1 text-sm font-medium text-nisky hover:bg-nisky hover:text-white">
+                          Delete
+                        </button>
+                      </form>
+                    ) : null}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </section>

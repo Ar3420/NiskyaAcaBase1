@@ -55,6 +55,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
         { label: "Type", value: entry.assignmentType },
         { label: "Class", value: course ? <Link href={`/classes/${course.slug}`}>{course.title}</Link> : "Class TBD" },
         { label: "Date", value: new Date(`${entry.dueDate}T12:00:00`).toLocaleDateString("en-US", { dateStyle: "long" }) },
+        { label: "Created", value: entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "Unknown" },
         { label: "Specificity", value: "Assignment" },
         { label: "Status", value: entry.published ? "Published" : "Draft" },
       ]}

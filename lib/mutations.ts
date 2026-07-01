@@ -103,6 +103,28 @@ export async function createEntityFromSnapshot({
   return { ok: true, slug: created.slug as string };
 }
 
+export async function deleteEntityPage({
+  entityType,
+  entityId,
+}: {
+  entityType: EntityType;
+  entityId: string;
+}) {
+  const supabase = createSupabaseServiceClient();
+  if (!supabase) {
+    return { ok: false, error: "Supabase service client is not configured." };
+  }
+
+  const table = entityTable(entityType);
+  await supabase.from("entity_links").delete().or(`source_id.eq.${entityId},target_id.eq.${entityId}`);
+  await supabase.from("revisions").delete().eq("entity_type", entityType).eq("entity_id", entityId);
+
+  const { error } = await supabase.from(table).delete().eq("id", entityId);
+  if (error) return { ok: false, error: error.message };
+
+  return { ok: true };
+}
+
 function entityTable(entityType: EntityType) {
   if (entityType === "class") return "classes";
   if (entityType === "subject") return "subjects";

@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
-import { getHelixSession } from "@/lib/auth";
+import { canModerate, getHelixSession } from "@/lib/auth";
 import { getSubjects } from "@/lib/database";
-import { createEntityFromSnapshot } from "@/lib/mutations";
+import { createEntityFromSnapshot, deleteEntityPage } from "@/lib/mutations";
 
 export default async function SubjectsPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
   const resolvedSearchParams = await searchParams;
   const [subjects, session] = await Promise.all([getSubjects(), getHelixSession()]);
+  const canDelete = canModerate(session);
   const query = resolvedSearchParams?.q?.trim() ?? "";
   const normalized = query.toLowerCase();
   const filteredSubjects = subjects
@@ -45,6 +46,16 @@ export default async function SubjectsPage({ searchParams }: { searchParams?: Pr
     });
     if (!result.ok || !result.slug) redirect(`/subjects?error=${encodeURIComponent(result.error ?? "Create failed")}`);
     redirect(`/subjects/${result.slug}?edit=1`);
+  }
+
+  async function deleteSubjectAction(formData: FormData) {
+    "use server";
+
+    const activeSession = await getHelixSession();
+    if (!canModerate(activeSession)) redirect("/login?next=/subjects");
+
+    await deleteEntityPage({ entityType: "subject", entityId: textField(formData, "entityId") });
+    redirect("/subjects");
   }
 
   return (
@@ -120,14 +131,22 @@ export default async function SubjectsPage({ searchParams }: { searchParams?: Pr
 
             <div className="mt-5 divide-y divide-line border border-line">
               {filteredSubjects.map((entry) => (
-                <Link key={entry.slug} href={`/subjects/${entry.slug}`} className="card-link block p-4 hover:bg-paper">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div>
+                <div key={entry.slug} className="p-4 hover:bg-paper">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <Link href={`/subjects/${entry.slug}`} className="card-link block">
                       <h3 className="card-link-heading font-serif text-2xl font-semibold">{entry.title}</h3>
-                    </div>
-                    <span className="text-sm text-muted">{entry.subtopics.length} subtopics</span>
+                      <span className="mt-1 block text-sm text-muted">{entry.subtopics.length} subtopics</span>
+                    </Link>
+                    {canDelete ? (
+                      <form action={deleteSubjectAction}>
+                        <input type="hidden" name="entityId" value={entry.id} />
+                        <button className="border border-nisky px-3 py-1 text-sm font-medium text-nisky hover:bg-nisky hover:text-white">
+                          Delete
+                        </button>
+                      </form>
+                    ) : null}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </section>

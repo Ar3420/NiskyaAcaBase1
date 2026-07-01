@@ -55,6 +55,7 @@ export default async function ResourcePage({ params, searchParams }: { params: P
       infoRows={[
         { label: "Type", value: entry.resourceType },
         { label: "Contributor", value: entry.contributor },
+        { label: "Created", value: entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "Unknown" },
         { label: "Status", value: entry.published ? "Published" : "Draft" },
       ]}
       infoboxEditor={

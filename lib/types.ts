@@ -37,6 +37,7 @@ export type ClassEntry = {
   resourceSlugs: string[];
   relatedLinks: RelatedLink[];
   published: boolean;
+  createdAt?: string;
 };
 
 export type SubjectEntry = {
@@ -50,6 +51,7 @@ export type SubjectEntry = {
   resourceSlugs: string[];
   relatedLinks: RelatedLink[];
   published: boolean;
+  createdAt?: string;
 };
 
 export type PrincipleEntry = {
@@ -64,6 +66,7 @@ export type PrincipleEntry = {
   resourceSlugs: string[];
   relatedLinks: RelatedLink[];
   published: boolean;
+  createdAt?: string;
 };
 
 export type AssignmentType = "homework" | "quiz" | "test" | "project" | "lab" | "reading" | "other";
@@ -81,6 +84,7 @@ export type AssignmentEntry = {
   resourceSlugs: string[];
   relatedLinks: RelatedLink[];
   published: boolean;
+  createdAt?: string;
 };
 
 export type ResourceEntry = {
@@ -98,4 +102,5 @@ export type ResourceEntry = {
   relatedLinks: RelatedLink[];
   contributor: string;
   published: boolean;
+  createdAt?: string;
 };

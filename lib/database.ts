@@ -20,6 +20,7 @@ type ClassRow = {
   overview: string | null;
   metadata_json: Record<string, unknown> | null;
   published: boolean;
+  created_at?: string | null;
 };
 
 type SubjectRow = {
@@ -29,6 +30,7 @@ type SubjectRow = {
   overview: string | null;
   metadata_json: Record<string, unknown> | null;
   published: boolean;
+  created_at?: string | null;
 };
 
 type PrincipleRow = {
@@ -38,6 +40,7 @@ type PrincipleRow = {
   overview: string | null;
   metadata_json: Record<string, unknown> | null;
   published: boolean;
+  created_at?: string | null;
 };
 
 type AssignmentRow = {
@@ -50,6 +53,7 @@ type AssignmentRow = {
   description: string | null;
   metadata_json: Record<string, unknown> | null;
   published: boolean;
+  created_at?: string | null;
   classes?: { slug: string; title: string } | null;
 };
 
@@ -64,6 +68,7 @@ type ResourceRow = {
   file_url: string | null;
   metadata_json: Record<string, unknown> | null;
   published: boolean;
+  created_at?: string | null;
 };
 
 type RevisionRow = {
@@ -319,6 +324,7 @@ function mapClassRow(row: ClassRow): ClassEntry {
     resourceSlugs: stringArray(metadata.resources),
     relatedLinks: relatedLinks(metadata.related_links),
     published: row.published,
+    createdAt: row.created_at ?? undefined,
   };
 }
 
@@ -335,6 +341,7 @@ function mapSubjectRow(row: SubjectRow): SubjectEntry {
     resourceSlugs: stringArray(metadata.resources),
     relatedLinks: relatedLinks(metadata.related_links),
     published: row.published,
+    createdAt: row.created_at ?? undefined,
   };
 }
 
@@ -352,6 +359,7 @@ function mapPrincipleRow(row: PrincipleRow): PrincipleEntry {
     resourceSlugs: stringArray(metadata.resources),
     relatedLinks: relatedLinks(metadata.related_links),
     published: row.published,
+    createdAt: row.created_at ?? undefined,
   };
 }
 
@@ -370,6 +378,7 @@ function mapAssignmentRow(row: AssignmentRow): AssignmentEntry {
     resourceSlugs: stringArray(metadata.resources),
     relatedLinks: relatedLinks(metadata.related_links),
     published: row.published,
+    createdAt: row.created_at ?? undefined,
   };
 }
 
@@ -390,6 +399,7 @@ function mapResourceRow(row: ResourceRow): ResourceEntry {
     relatedLinks: relatedLinks(metadata.related_links),
     contributor: stringValue(metadata.contributor) ?? "Unknown contributor",
     published: row.published,
+    createdAt: row.created_at ?? undefined,
   };
 }
 
