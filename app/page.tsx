@@ -36,8 +36,8 @@ export default function HomePage() {
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {navCards.map(({ title, href, icon: Icon }) => (
-            <Link key={href} href={href} className="card-link border border-line bg-white p-5 hover:border-nisky">
-              <Icon className="mb-4 h-7 w-7 text-nisky" aria-hidden="true" />
+            <Link key={href} href={href} className="card-link flex aspect-square flex-col items-center justify-center border border-line bg-white p-5 text-center hover:border-nisky">
+              <Icon className="mb-4 h-8 w-8 text-nisky" aria-hidden="true" />
               <h2 className="card-link-heading font-serif text-2xl font-semibold">{title}</h2>
             </Link>
           ))}
