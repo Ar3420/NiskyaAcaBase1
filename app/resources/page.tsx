@@ -6,7 +6,7 @@ import { canModerate, getHelixSession } from "@/lib/auth";
 import { getAssignments, getClasses, getPrinciples, getResources, getSubjects } from "@/lib/database";
 import { parseManualRelatedLinks, referenceTargets, resolveReferences } from "@/lib/editParsing";
 import { buildDatabaseLinkTargets } from "@/lib/linkTargets";
-import { createEntityFromSnapshot, deleteEntityPage } from "@/lib/mutations";
+import { createEntityFromSnapshot, deleteEntityPage, uploadResourceFile } from "@/lib/mutations";
 import type { AssignmentEntry, ClassEntry, ResourceEntry, SubjectEntry } from "@/lib/types";
 
 const resourceTypes = ["notes", "study guide", "practice", "packet", "template", "video", "website", "document", "other"];
@@ -59,6 +59,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
 
     const title = textField(formData, "title");
     const slug = textField(formData, "slug") || slugify(title);
+    const upload = await uploadResourceFile(fileField(formData, "resourceFile"), slug);
+    if (!upload.ok) redirect(`/resources?error=${encodeURIComponent(upload.error ?? "File upload failed")}`);
     const snapshot = {
       title,
       slug,
@@ -66,7 +68,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
       description: textField(formData, "description"),
       contentBody: textField(formData, "contentBody"),
       externalUrl: textField(formData, "externalUrl"),
-      fileUrl: textField(formData, "fileUrl"),
+      fileUrl: upload.url || textField(formData, "fileUrl"),
       relatedClassSlugs: resolveReferences(textField(formData, "relatedClassSlugs"), referenceTargets(classes, "classes")),
       relatedSubjectSlugs: resolveReferences(textField(formData, "relatedSubjectSlugs"), referenceTargets(subjects, "subjects")),
       relatedAssignmentSlugs: resolveReferences(textField(formData, "relatedAssignmentSlugs"), referenceTargets(assignments, "assignments")),
@@ -146,6 +148,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
                 </select>
                 <input name="externalUrl" placeholder="External URL, optional" className="border border-line bg-white px-3 py-2 text-sm" />
                 <input name="fileUrl" placeholder="File URL, optional" className="border border-line bg-white px-3 py-2 text-sm" />
+                <input name="resourceFile" type="file" accept="application/pdf,.pdf,image/*,.doc,.docx,.ppt,.pptx" className="border border-line bg-white px-3 py-2 text-sm" />
                 <input name="contributor" placeholder="Contributor name, optional" className="border border-line bg-white px-3 py-2 text-sm" />
               </div>
               <textarea name="description" rows={3} placeholder="Short resource description" className="border border-line bg-white px-3 py-2 text-sm" />
@@ -239,6 +242,11 @@ function ResourceRow({
 
 function textField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+function fileField(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return value instanceof File ? value : null;
 }
 
 function slugify(value: string) {

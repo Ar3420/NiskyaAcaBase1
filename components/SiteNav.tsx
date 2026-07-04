@@ -11,8 +11,15 @@ export async function SiteNav({ variant = "logo" }: { variant?: "logo" | "home" 
     <header className="border-b border-line bg-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
         {variant === "home" ? (
-          <Link href="/" className="font-serif text-xl font-semibold text-ink no-underline">
-            Niskayuna Academic Database
+          <Link href="/" className="flex items-center no-underline" aria-label="Niskayuna Academic Database home">
+            <Image
+              src="/na-database-logo.png"
+              alt="Niskayuna Academic Database logo"
+              width={52}
+              height={52}
+              className="h-12 w-12 object-contain"
+              priority
+            />
           </Link>
         ) : (
           <Link href="/" className="flex items-center no-underline" aria-label="Niskayuna Academic Database home">

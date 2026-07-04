@@ -34,9 +34,11 @@ export default async function ResourcePage({ params, searchParams }: { params: P
   const isEditing = resolvedSearchParams?.edit === "1";
   const hasContent = Boolean(entry.contentBody.trim());
   const hasDescription = Boolean(entry.description.trim());
+  const hasFile = Boolean(entry.fileUrl?.trim());
   const visibleToc = [
     hasDescription || isEditing ? "Description" : null,
     hasContent || isEditing ? "Content" : null,
+    hasFile || isEditing ? "Attached file" : null,
     relatedClasses.length > 0 || isEditing ? "Related classes" : null,
     relatedSubjects.length > 0 || isEditing ? "Related subjects" : null,
     relatedAssignments.length > 0 || isEditing ? "Related assignments" : null,
@@ -55,6 +57,7 @@ export default async function ResourcePage({ params, searchParams }: { params: P
       infoRows={[
         { label: "Type", value: entry.resourceType },
         { label: "Contributor", value: entry.contributor },
+        { label: "File", value: entry.fileUrl ? <a href={entry.fileUrl}>Open file</a> : "None" },
         { label: "Created", value: entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "Unknown" },
         { label: "Status", value: entry.published ? "Published" : "Draft" },
       ]}
@@ -74,6 +77,7 @@ export default async function ResourcePage({ params, searchParams }: { params: P
     >
       {hasDescription ? <Section title="Description"><p><AttributedText revisions={revisions} field="description" linkTargets={linkTargets}>{entry.description}</AttributedText></p></Section> : null}
       {hasContent ? <Section title="Content"><p><AttributedText revisions={revisions} field="contentBody" linkTargets={linkTargets}>{entry.contentBody}</AttributedText></p></Section> : null}
+      {hasFile ? <Section title="Attached file"><p><a href={entry.fileUrl}>Open attached file</a></p></Section> : null}
       {relatedClasses.length > 0 ? <Section title="Related classes"><LinkList links={relatedClasses.map((course) => ({ href: `/classes/${course.slug}`, label: course.title }))} /></Section> : null}
       {relatedSubjects.length > 0 ? <Section title="Related subjects"><LinkList links={relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title }))} /></Section> : null}
       {relatedAssignments.length > 0 ? <Section title="Related assignments"><LinkList links={relatedAssignments.map((assignment) => ({ href: `/assignments/${assignment.slug}`, label: assignment.title }))} /></Section> : null}

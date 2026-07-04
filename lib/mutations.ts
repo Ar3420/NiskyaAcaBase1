@@ -125,6 +125,29 @@ export async function deleteEntityPage({
   return { ok: true };
 }
 
+export async function uploadResourceFile(file: File | null, slug: string) {
+  if (!file || file.size === 0) return { ok: true, url: "" };
+
+  const supabase = createSupabaseServiceClient();
+  if (!supabase) {
+    return { ok: false, error: "Supabase service client is not configured.", url: "" };
+  }
+
+  const bucket = process.env.SUPABASE_RESOURCE_FILES_BUCKET ?? "resource-files";
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "resource-file";
+  const safeSlug = slug.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "resource";
+  const path = `${safeSlug}/${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage.from(bucket).upload(path, file, {
+    contentType: file.type || "application/octet-stream",
+    upsert: false,
+  });
+
+  if (error) return { ok: false, error: error.message, url: "" };
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return { ok: true, url: data.publicUrl };
+}
+
 function entityTable(entityType: EntityType) {
   if (entityType === "class") return "classes";
   if (entityType === "subject") return "subjects";

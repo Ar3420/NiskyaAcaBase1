@@ -3,7 +3,7 @@ import Link from "next/link";
 import { EditableTextArea } from "@/components/EditableTextArea";
 import { canEdit, canModerate, getHelixSession } from "@/lib/auth";
 import { parseManualRelatedLinks } from "@/lib/editParsing";
-import { updateEntityFromSnapshot } from "@/lib/mutations";
+import { updateEntityFromSnapshot, uploadResourceFile } from "@/lib/mutations";
 import type { AssignmentEntry, ClassEntry, EntityType, PrincipleEntry, ResourceEntry, SubjectEntry } from "@/lib/types";
 
 type EditableEntry = ClassEntry | SubjectEntry | PrincipleEntry | AssignmentEntry | ResourceEntry;
@@ -32,6 +32,13 @@ export async function InlineEditPanel({
     if (!activeSession) redirect(`/${entityPath(entityType)}/${entry.slug}?edit=1`);
 
     const snapshot = buildSnapshot(entityType, formData, currentPublished, canModerate(activeSession));
+    if (entityType === "resource") {
+      const upload = await uploadResourceFile(fileField(formData, "resourceFile"), String(snapshot.slug ?? entry.slug));
+      if (!upload.ok) {
+        redirect(`/${entityPath(entityType)}/${entry.slug}?edit=1&error=${encodeURIComponent(upload.error ?? "File upload failed")}`);
+      }
+      if (upload.url) (snapshot as Record<string, unknown>).fileUrl = upload.url;
+    }
     const changeSummary = String(formData.get("changeSummary") ?? "");
     const result = await updateEntityFromSnapshot({
       entityType,
@@ -152,6 +159,7 @@ function renderEntityFields(entityType: EntityType, entry: EditableEntry, disabl
         <TextArea label="Content body" name="contentBody" defaultValue={entry.contentBody} disabled={disabled} />
         <Field label="External URL" name="externalUrl" defaultValue={entry.externalUrl ?? ""} disabled={disabled} />
         <Field label="File URL" name="fileUrl" defaultValue={entry.fileUrl ?? ""} disabled={disabled} />
+        <FileField label="Upload file" name="resourceFile" disabled={disabled} help="Uploads to the configured Supabase resource-files bucket and replaces File URL." />
         <Field label="Related class links" name="relatedClassSlugs" defaultValue={entry.relatedClassSlugs.join(", ")} disabled={disabled} help="Use page URLs or slugs." />
         <Field label="Related subject links" name="relatedSubjectSlugs" defaultValue={entry.relatedSubjectSlugs.join(", ")} disabled={disabled} help="Use page URLs or slugs." />
         <Field label="Related assignment links" name="relatedAssignmentSlugs" defaultValue={entry.relatedAssignmentSlugs.join(", ")} disabled={disabled} help="Use page URLs or slugs." />
@@ -182,6 +190,16 @@ function TextArea({ label, name, defaultValue, disabled, help }: { label: string
   );
 }
 
+function FileField({ label, name, disabled, help }: { label: string; name: string; disabled: boolean; help?: string }) {
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <input name={name} type="file" disabled={disabled} accept="application/pdf,.pdf,image/*,.doc,.docx,.ppt,.pptx" className="border border-line bg-white px-3 py-2" />
+      {help ? <span className="text-xs font-normal text-muted">{help}</span> : null}
+    </label>
+  );
+}
+
 function buildSnapshot(entityType: EntityType, formData: FormData, currentPublished: boolean, boardAllowed: boolean) {
   const base = { slug: textField(formData, "slug"), title: textField(formData, "title"), published: boardAllowed ? formData.get("published") === "on" : currentPublished };
   if (entityType === "class") return { ...base, department: textField(formData, "department"), gradeLevels: listField(formData, "gradeLevels"), overview: textField(formData, "overview"), units: unitTopicField(formData, "units"), relatedSubjectSlugs: listField(formData, "relatedSubjectSlugs"), assignmentSlugs: listField(formData, "assignmentSlugs"), resourceSlugs: listField(formData, "resourceSlugs"), relatedLinks: relatedLinksField(formData) };
@@ -193,6 +211,11 @@ function buildSnapshot(entityType: EntityType, formData: FormData, currentPublis
 
 function textField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+function fileField(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return value instanceof File ? value : null;
 }
 
 function listField(formData: FormData, key: string) {
