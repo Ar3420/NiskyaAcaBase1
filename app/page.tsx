@@ -34,11 +34,11 @@ export default function HomePage() {
           <p className="mt-5 text-lg text-gold/80">A Helix Research and Development academic knowledge project</p>
         </section>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <section className="mx-auto mt-8 grid max-w-5xl gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {navCards.map(({ title, href, icon: Icon }) => (
-            <Link key={href} href={href} className="card-link flex aspect-square flex-col items-center justify-center border border-line bg-white p-5 text-center hover:border-nisky">
-              <Icon className="mb-4 h-8 w-8 text-nisky" aria-hidden="true" />
-              <h2 className="card-link-heading font-serif text-2xl font-semibold">{title}</h2>
+            <Link key={href} href={href} className="card-link flex aspect-square flex-col items-center justify-center border border-line bg-white p-4 text-center hover:border-nisky">
+              <Icon className="mb-3 h-7 w-7 text-nisky" aria-hidden="true" />
+              <h2 className="card-link-heading font-serif text-xl font-semibold">{title}</h2>
             </Link>
           ))}
         </section>
