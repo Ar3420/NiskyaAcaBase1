@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, CalendarDays, FileClock, FileText, Library, Sigma } from "lucide-react";
+import { BookOpen, CalendarDays, FileClock, FileText, GitFork, HelpCircle, Library, Sigma } from "lucide-react";
 import { SearchBox } from "@/components/SearchBox";
 import { SiteNav } from "@/components/SiteNav";
 import { getAssignments, getClasses, getPrinciples, getResources, getSubjects } from "@/lib/database";
@@ -9,26 +9,27 @@ const navCards = [
   {
     title: "Classes",
     href: "/classes",
-    description: "Browse course pages, departments, units, assignments, and related resources.",
     icon: BookOpen,
   },
   {
     title: "Subjects",
     href: "/subjects",
-    description: "Explore academic concept pages with related classes, subtopics, and study materials.",
     icon: Library,
   },
   {
     title: "Principles",
     href: "/principles",
-    description: "Open formula, law, theorem, and named-concept pages under subjects.",
     icon: Sigma,
   },
   {
     title: "Homework",
     href: "/homework",
-    description: "View assignments and tests as a calendar or filtered workload list.",
     icon: CalendarDays,
+  },
+  {
+    title: "Tree",
+    href: "/tree",
+    icon: GitFork,
   },
 ];
 
@@ -134,17 +135,15 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
         </section>
 
         <section className="mt-8 grid gap-4 md:grid-cols-5">
-          {navCards.map(({ title, href, description, icon: Icon }) => (
+          {navCards.map(({ title, href, icon: Icon }) => (
             <Link key={href} href={href} className="card-link border border-line bg-white p-5 hover:border-nisky">
               <Icon className="mb-4 h-7 w-7 text-nisky" aria-hidden="true" />
               <h2 className="card-link-heading font-serif text-2xl font-semibold">{title}</h2>
-              <p className="mt-2 text-sm text-muted">{description}</p>
             </Link>
           ))}
           <Link href="/recent" className="card-link border border-line bg-white p-5 hover:border-nisky">
             <FileClock className="mb-4 h-7 w-7 text-nisky" aria-hidden="true" />
             <h2 className="card-link-heading font-serif text-2xl font-semibold">Recent</h2>
-            <p className="mt-2 text-sm text-muted">Review the most recently added or edited classes, subjects, principles, and assignments.</p>
           </Link>
         </section>
 
@@ -154,7 +153,15 @@ export default async function HomePage({ searchParams }: { searchParams?: Promis
         >
           <FileText className="h-5 w-5 text-nisky" aria-hidden="true" />
           <span className="card-link-heading font-medium">Resources</span>
-          <span className="text-muted">Reusable notes, study guides, packets, templates, and external links.</span>
+        </Link>
+
+        <Link
+          href="/guide"
+          className="card-link mt-4 flex items-center gap-3 border border-line bg-white p-4 text-sm hover:border-nisky"
+        >
+          <HelpCircle className="h-5 w-5 text-nisky" aria-hidden="true" />
+          <span className="card-link-heading font-medium">Guide</span>
+          <span className="text-muted">How to browse, search, edit, link pages, upload resources, and understand revisions.</span>
         </Link>
 
         <details className="mt-4 border border-line bg-white p-4" open={Boolean(selectedType || selectedYear || selectedClass || selectedSubject || pageQuery)}>

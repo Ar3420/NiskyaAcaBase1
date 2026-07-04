@@ -96,17 +96,17 @@ export default async function PrinciplePage({ params, searchParams }: { params: 
       ]}
       infoboxEditor={
         <>
-          <InfoboxInput form="principle-edit-form" label="Classes" name="relatedClassSlugs" defaultValue={relatedClasses.map((course) => course.title).join(", ")} help="Use page titles, URLs, or slugs." />
-          <InfoboxInput form="principle-edit-form" label="Subjects" name="relatedSubjectSlugs" defaultValue={relatedSubjects.map((subject) => subject.title).join(", ")} help="Use page titles, URLs, or slugs." />
+          <InfoboxInput form="principle-edit-form" label="Branch classes" name="relatedClassSlugs" defaultValue={relatedClasses.map((course) => course.title).join(", ")} help="Use multiple page titles, URLs, or slugs separated by commas." />
+          <InfoboxInput form="principle-edit-form" label="Branch subjects" name="relatedSubjectSlugs" defaultValue={relatedSubjects.map((subject) => subject.title).join(", ")} help="Use multiple page titles, URLs, or slugs separated by commas." />
           <InfoboxInput form="principle-edit-form" label="Assignments" name="relatedAssignmentSlugs" defaultValue={relatedAssignments.map((assignment) => assignment.title).join(", ")} help="Use page titles, URLs, or slugs." />
           <InfoboxInput form="principle-edit-form" label="Resources" name="resourceSlugs" defaultValue={linkedResources.map((resource) => resource.title).join(", ")} help="Use page titles, URLs, or slugs." />
           <InfoboxStatic label="Status" value={entry.published ? "Published" : "Draft"} />
         </>
       }
       specificityTree={<SpecificityBranch items={[
-        relatedClasses[0] ? { label: relatedClasses[0].title, href: `/classes/${relatedClasses[0].slug}` } : { label: "Class TBD" },
-        relatedSubjects[0] ? { label: relatedSubjects[0].title, href: `/subjects/${relatedSubjects[0].slug}` } : { label: "Subject TBD" },
-        { label: entry.title, href: `/principles/${entry.slug}` },
+        ...(relatedClasses.length ? relatedClasses.map((course) => ({ label: course.title, href: `/classes/${course.slug}`, level: 0 })) : [{ label: "Class TBD", level: 0 }]),
+        ...(relatedSubjects.length ? relatedSubjects.map((subject) => ({ label: subject.title, href: `/subjects/${subject.slug}`, level: 1 })) : [{ label: "Subject TBD", level: 1 }]),
+        { label: entry.title, href: `/principles/${entry.slug}`, level: 2 },
       ]} />}
       related={<LinkList links={[...relatedSubjects.map((subject) => ({ href: `/subjects/${subject.slug}`, label: subject.title })), ...entry.relatedLinks]} />}
       relatedEditor={<RelatedLinksEditor form="principle-edit-form" links={entry.relatedLinks} />}
