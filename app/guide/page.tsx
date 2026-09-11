@@ -49,7 +49,7 @@ export default function GuidePage() {
         </div>
 
         <div className="mt-8 flex flex-wrap gap-3 text-sm">
-          <Link href="/tree" className="border border-line px-4 py-2 hover:bg-paper">Open tree view</Link>
+          <Link href="/all" className="border border-line px-4 py-2 hover:bg-paper">Open all pages</Link>
           <Link href="/resources" className="border border-line px-4 py-2 hover:bg-paper">Open resources</Link>
           <Link href="/homework" className="border border-line px-4 py-2 hover:bg-paper">Open homework</Link>
         </div>

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { getHelixSession } from "@/lib/auth";
@@ -10,29 +9,14 @@ export async function SiteNav({ variant = "logo" }: { variant?: "logo" | "home" 
   return (
     <header className="border-b border-line bg-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
-        {variant === "home" ? (
-          <Link href="/" className="flex items-center no-underline" aria-label="Niskayuna Academic Database home">
-            <Image
-              src="/na-database-logo.png"
-              alt="Niskayuna Academic Database logo"
-              width={52}
-              height={52}
-              className="h-12 w-12 object-contain"
-              priority
-            />
-          </Link>
-        ) : (
-          <Link href="/" className="flex items-center no-underline" aria-label="Niskayuna Academic Database home">
-            <Image
-              src="/na-database-logo.png"
-              alt="Niskayuna Academic Database logo"
-              width={52}
-              height={52}
-              className="h-12 w-12 object-contain"
-              priority
-            />
-          </Link>
-        )}
+        <Link href="/" className="flex items-center no-underline" aria-label={variant === "home" ? "Current homepage" : "Return to homepage"}>
+          <span
+            className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-gold bg-nisky shadow-sm"
+            aria-hidden="true"
+          >
+            <span className="h-5 w-5 rounded-full border-2 border-gold bg-white" />
+          </span>
+        </Link>
         <form action="/search" className="flex w-full max-w-xl items-center gap-2 rounded border border-line bg-paper px-3 py-2">
           <Search className="h-4 w-4 text-muted" aria-hidden="true" />
           <input

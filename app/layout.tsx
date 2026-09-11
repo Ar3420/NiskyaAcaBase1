@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Niskayuna Academic Database",
-  description: "A Helix Research and Development academic knowledge project.",
+  description: "By Helix R&D.",
   icons: {
     icon: "/Helixico.ico",
     shortcut: "/Helixico.ico",

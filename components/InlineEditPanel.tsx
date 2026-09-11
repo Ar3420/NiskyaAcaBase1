@@ -74,7 +74,7 @@ export async function InlineEditPanel({
 
       {error ? <p className="mt-4 border border-nisky bg-nisky/5 p-3 text-sm text-nisky">{error}</p> : null}
 
-      <form id={formId} action={saveAction} className="mt-5 grid gap-5">
+      <form id={formId} action={saveAction} encType="multipart/form-data" className="mt-5 grid gap-5">
         <div className="grid gap-4 border border-line bg-white p-4">
           <h3 className="font-serif text-xl font-semibold">Page basics</h3>
           <Field label="Title" name="title" defaultValue={entry.title} disabled={!allowed} required />

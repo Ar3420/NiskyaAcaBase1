@@ -139,7 +139,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
         <details className="mt-4 border border-gold bg-white">
           <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-nisky">Add a resource</summary>
           {session ? (
-            <form action={createResourceAction} className="grid gap-3 border-t border-line bg-paper p-4">
+            <form action={createResourceAction} encType="multipart/form-data" className="grid gap-3 border-t border-line bg-paper p-4">
               <div className="grid gap-3 md:grid-cols-3">
                 <input name="title" required placeholder="Resource title" className="border border-line bg-white px-3 py-2 text-sm" />
                 <input name="slug" placeholder="Slug, optional" className="border border-line bg-white px-3 py-2 text-sm" />
