@@ -24,8 +24,22 @@ body {
   background: #faf8f3;
 }
 
-.page-fade {
+.page-transition-shell {
+  min-height: 100vh;
+}
+
+.page-transition-content {
   animation: page-fade-in 180ms ease-out;
+}
+
+.page-transition-sweep {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: #b91f2d;
+  transform: translateX(-100%);
+  animation: page-red-sweep 420ms ease-in-out both;
 }
 
 @keyframes page-fade-in {
@@ -37,6 +51,31 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes page-red-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  45% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-content,
+  .page-transition-sweep {
+    animation: none;
+  }
+
+  .page-transition-sweep {
+    display: none;
   }
 }
 
