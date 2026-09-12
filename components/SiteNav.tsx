@@ -11,10 +11,10 @@ export async function SiteNav({ variant = "logo" }: { variant?: "logo" | "home" 
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
         <Link href="/" className="flex items-center no-underline" aria-label={variant === "home" ? "Current homepage" : "Return to homepage"}>
           <span
-            className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-gold bg-nisky shadow-sm"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-gold bg-nisky shadow-sm"
             aria-hidden="true"
           >
-            <span className="h-5 w-5 rounded-full border-2 border-gold bg-white" />
+            <span className="h-5 w-5 rounded-full border border-gold bg-white" />
           </span>
         </Link>
         <form action="/search" className="flex w-full max-w-xl items-center gap-2 rounded border border-line bg-paper px-3 py-2">

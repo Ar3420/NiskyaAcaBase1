@@ -24,6 +24,22 @@ body {
   background: #faf8f3;
 }
 
+.page-fade {
+  animation: page-fade-in 180ms ease-out;
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 a {
   color: #b88a10;
   text-decoration: underline;

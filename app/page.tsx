@@ -20,23 +20,25 @@ export default function HomePage() {
       <SiteNav variant="home" />
       <main className="mx-auto max-w-6xl px-4 py-10">
         <section className="bg-white px-5 py-10 text-center">
-          <Image
-            src="/na-database-logo.png"
-            alt="Niskayuna Academic Database logo"
-            width={260}
-            height={260}
-            priority
-            className="mx-auto my-8 h-auto w-64"
-          />
+          <div className="mx-auto my-8 flex h-72 w-72 items-center justify-center rounded-full border border-gold outline outline-2 outline-offset-3 outline-nisky/80">
+            <Image
+              src="/na-database-logo.png"
+              alt="Niskayuna Academic Database logo"
+              width={230}
+              height={230}
+              priority
+              className="h-auto w-56"
+            />
+          </div>
           <SearchBox large />
           <p className="mt-5 text-lg text-gold/80">By Helix R&amp;D</p>
         </section>
 
         <section className="mx-auto mt-8 grid max-w-5xl gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
           {navCards.map(({ title, href, icon: Icon }) => (
-            <Link key={href} href={href} className="card-link flex aspect-square flex-col items-center justify-center border border-line bg-white p-4 text-center hover:border-nisky">
-              <Icon className="mb-3 h-7 w-7 text-nisky" aria-hidden="true" />
-              <h2 className="card-link-heading font-serif text-xl font-semibold">{title}</h2>
+            <Link key={href} href={href} aria-label={title} title={title} className="card-link flex aspect-square flex-col items-center justify-center border border-line bg-white p-4 text-center hover:border-nisky">
+              <Icon className="h-8 w-8 text-nisky" aria-hidden="true" />
+              <span className="sr-only">{title}</span>
             </Link>
           ))}
         </section>
