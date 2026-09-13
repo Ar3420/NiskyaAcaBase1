@@ -2,6 +2,8 @@ import type { EntityType } from "./types";
 import type { HelixSession } from "./auth";
 import { createSupabaseServiceClient } from "./supabase";
 
+const DEFAULT_RESOURCE_UPLOAD_MAX_MB = 25;
+
 export async function updateEntityFromSnapshot({
   entityType,
   entityId,
@@ -128,6 +130,15 @@ export async function deleteEntityPage({
 export async function uploadResourceFile(file: File | null, slug: string) {
   if (!file || file.size === 0) return { ok: true, url: "" };
 
+  const maxBytes = resourceUploadMaxBytes();
+  if (file.size > maxBytes) {
+    return {
+      ok: false,
+      error: `File is too large. The current upload limit is ${formatBytes(maxBytes)}.`,
+      url: "",
+    };
+  }
+
   const supabase = createSupabaseServiceClient();
   if (!supabase) {
     return { ok: false, error: "Supabase service client is not configured.", url: "" };
@@ -146,6 +157,17 @@ export async function uploadResourceFile(file: File | null, slug: string) {
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return { ok: true, url: data.publicUrl };
+}
+
+function resourceUploadMaxBytes() {
+  const configuredMb = Number(process.env.RESOURCE_UPLOAD_MAX_MB);
+  const maxMb = Number.isFinite(configuredMb) && configuredMb > 0 ? configuredMb : DEFAULT_RESOURCE_UPLOAD_MAX_MB;
+  return Math.floor(maxMb * 1024 * 1024);
+}
+
+function formatBytes(bytes: number) {
+  const mb = bytes / (1024 * 1024);
+  return `${Number.isInteger(mb) ? mb : mb.toFixed(1)} MB`;
 }
 
 function entityTable(entityType: EntityType) {

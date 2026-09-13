@@ -159,7 +159,7 @@ function renderEntityFields(entityType: EntityType, entry: EditableEntry, disabl
         <TextArea label="Content body" name="contentBody" defaultValue={entry.contentBody} disabled={disabled} />
         <Field label="External URL" name="externalUrl" defaultValue={entry.externalUrl ?? ""} disabled={disabled} />
         <Field label="File URL" name="fileUrl" defaultValue={entry.fileUrl ?? ""} disabled={disabled} />
-        <FileField label="Upload file" name="resourceFile" disabled={disabled} help="Uploads to the configured Supabase resource-files bucket and replaces File URL." />
+        <FileField label="Upload file" name="resourceFile" disabled={disabled} help="Uploads to the configured Supabase resource-files bucket and replaces File URL. Default limit: 25 MB." />
         <Field label="Related class links" name="relatedClassSlugs" defaultValue={entry.relatedClassSlugs.join(", ")} disabled={disabled} help="Use page URLs or slugs." />
         <Field label="Related subject links" name="relatedSubjectSlugs" defaultValue={entry.relatedSubjectSlugs.join(", ")} disabled={disabled} help="Use page URLs or slugs." />
         <Field label="Related assignment links" name="relatedAssignmentSlugs" defaultValue={entry.relatedAssignmentSlugs.join(", ")} disabled={disabled} help="Use page URLs or slugs." />

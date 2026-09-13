@@ -17,6 +17,7 @@ type ResourceSearchParams = {
   class?: string;
   subject?: string;
   assignment?: string;
+  error?: string;
 };
 
 export default async function ResourcesPage({ searchParams }: { searchParams?: Promise<ResourceSearchParams> }) {
@@ -26,6 +27,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
   const selectedClass = resolvedSearchParams?.class ?? "";
   const selectedSubject = resolvedSearchParams?.subject ?? "";
   const selectedAssignment = resolvedSearchParams?.assignment ?? "";
+  const error = resolvedSearchParams?.error ?? "";
   const [resources, classes, subjects, principles, assignments, session] = await Promise.all([
     getResources(),
     getClasses(),
@@ -100,18 +102,15 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
   return (
     <div className="min-h-screen bg-white text-ink">
       <SiteNav />
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.14em] text-muted">Reusable database materials</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-muted">Database directory</p>
             <h1 className="font-serif text-4xl font-semibold">Resources</h1>
-            <p className="mt-2 max-w-3xl text-muted">
-              Notes, study guides, packets, templates, websites, videos, and other materials connected to classes,
-              subjects, assignments, and principles.
+            <p className="mt-1 text-sm text-muted">
+              {filteredResources.length} resource{filteredResources.length === 1 ? "" : "s"} shown
+              {query ? ` for "${query}"` : ""}.
             </p>
-          </div>
-          <div className="text-sm text-muted">
-            {filteredResources.length} resource{filteredResources.length === 1 ? "" : "s"} shown
           </div>
         </div>
 
@@ -136,6 +135,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
           </select>
         </form>
 
+        {error ? <p className="mt-4 border border-nisky bg-nisky/5 p-3 text-sm text-nisky">{error}</p> : null}
+
         <details className="mt-4 border border-gold bg-white">
           <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-nisky">Add a resource</summary>
           {session ? (
@@ -148,7 +149,11 @@ export default async function ResourcesPage({ searchParams }: { searchParams?: P
                 </select>
                 <input name="externalUrl" placeholder="External URL, optional" className="border border-line bg-white px-3 py-2 text-sm" />
                 <input name="fileUrl" placeholder="File URL, optional" className="border border-line bg-white px-3 py-2 text-sm" />
-                <input name="resourceFile" type="file" accept="application/pdf,.pdf,image/*,.doc,.docx,.ppt,.pptx" className="border border-line bg-white px-3 py-2 text-sm" />
+                <label className="grid gap-1 text-sm">
+                  Upload file
+                  <input name="resourceFile" type="file" accept="application/pdf,.pdf,image/*,.doc,.docx,.ppt,.pptx" className="border border-line bg-white px-3 py-2 text-sm" />
+                  <span className="text-xs text-muted">PDFs, images, docs, and slides. Default limit: 25 MB.</span>
+                </label>
                 <input name="contributor" placeholder="Contributor name, optional" className="border border-line bg-white px-3 py-2 text-sm" />
               </div>
               <textarea name="description" rows={3} placeholder="Short resource description" className="border border-line bg-white px-3 py-2 text-sm" />

@@ -25,11 +25,7 @@ export async function SiteNav({ variant = "logo" }: { variant?: "logo" | "home" 
             className="w-full bg-transparent text-sm outline-none"
           />
         </form>
-        <nav className="flex items-center gap-4 text-sm text-muted">
-          <Link href="/classes" className="hover:text-nisky">Classes</Link>
-          <Link href="/subjects" className="hover:text-nisky">Subjects</Link>
-          <Link href="/principles" className="hover:text-nisky">Principles</Link>
-          <Link href="/homework" className="hover:text-nisky">Homework</Link>
+        <nav className="flex items-center gap-3 text-sm text-muted">
           <TextSizeSelect />
           {session ? (
             <Link href="/account" className="rounded border border-line bg-paper px-2 py-1 font-mono text-xs text-ink no-underline">
